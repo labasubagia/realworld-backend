@@ -27,7 +27,8 @@ type CreateArticleParams struct {
 }
 
 type CreateTagParams struct {
-	Tag domain.Tag
+	ArticleID string
+	Tag       string
 }
 
 type ArticleRepository interface {

@@ -16,8 +16,21 @@ func NewArticleService(repo port.Repository) port.ArticleService {
 	}
 }
 
-// Create implements port.ArticleService.
-func (s *articleService) Create(context.Context, port.CreateArticleTxParams) (port.CreateArticleTxResult, error) {
-
-	return port.CreateArticleTxResult{}, nil
+func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxParams) (result port.CreateArticleTxResult, err error) {
+	err = s.repo.Atomic(ctx, func(r port.Repository) error {
+		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticleParams{Article: arg.Article})
+		if err != nil {
+			return err
+		}
+		for _, item := range arg.Tags {
+			arg := port.CreateTagParams{ArticleID: result.Article.ID, Tag: item}
+			tag, err := r.Article().CreateTag(ctx, arg)
+			if err != nil {
+				return err
+			}
+			result.Tags = append(result.Tags, tag)
+		}
+		return nil
+	})
+	return result, err
 }

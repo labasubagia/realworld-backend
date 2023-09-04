@@ -31,7 +31,7 @@ type CreateArticleTxParams struct {
 
 type CreateArticleTxResult struct {
 	Article domain.Article
-	Tags    []string
+	Tags    []domain.Tag
 }
 
 type ArticleService interface {
