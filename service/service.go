@@ -1,6 +1,6 @@
 package service
 
-import "github.com/labasubagia/go-backend-realworld/port"
+import "github.com/labasubagia/realworld-backend/port"
 
 type service struct {
 	repo           port.Repository

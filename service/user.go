@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/labasubagia/go-backend-realworld/port"
+	"github.com/labasubagia/realworld-backend/port"
 )
 
 type userService struct {

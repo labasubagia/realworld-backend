@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/labasubagia/go-backend-realworld/domain"
-	"github.com/labasubagia/go-backend-realworld/port"
+	"github.com/labasubagia/realworld-backend/domain"
+	"github.com/labasubagia/realworld-backend/port"
 	"github.com/uptrace/bun"
 )
 

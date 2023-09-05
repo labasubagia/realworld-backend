@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/labasubagia/go-backend-realworld/port"
+	"github.com/labasubagia/realworld-backend/port"
 )
 
 type Server struct {

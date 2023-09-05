@@ -6,10 +6,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/labasubagia/go-backend-realworld/domain"
-	"github.com/labasubagia/go-backend-realworld/port"
-	"github.com/labasubagia/go-backend-realworld/repository"
-	"github.com/labasubagia/go-backend-realworld/service"
+	"github.com/labasubagia/realworld-backend/domain"
+	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/repository"
+	"github.com/labasubagia/realworld-backend/service"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 )

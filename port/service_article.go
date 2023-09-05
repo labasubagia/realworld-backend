@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/labasubagia/go-backend-realworld/domain"
+	"github.com/labasubagia/realworld-backend/domain"
 )
 
 type CreateArticleTxParams struct {

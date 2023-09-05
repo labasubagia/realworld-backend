@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/labasubagia/go-backend-realworld/port"
+	"github.com/labasubagia/realworld-backend/port"
 	"github.com/uptrace/bun"
 )
 

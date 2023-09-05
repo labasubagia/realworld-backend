@@ -1,4 +1,4 @@
-module github.com/labasubagia/go-backend-realworld
+module github.com/labasubagia/realworld-backend
 
 go 1.21.0
 
