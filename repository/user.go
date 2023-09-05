@@ -18,6 +18,11 @@ func NewUserRepository(db bun.IDB) port.UserRepository {
 	}
 }
 
-func (r *userRepo) CreateUser(context.Context, port.CreateUserParams) (domain.User, error) {
-	return domain.User{}, nil
+func (r *userRepo) CreateUser(ctx context.Context, req port.CreateUserParams) (domain.User, error) {
+	user := req.User
+	_, err := r.db.NewInsert().Model(&user).Exec(ctx)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
 }

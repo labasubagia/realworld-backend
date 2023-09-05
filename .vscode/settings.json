@@ -1,14 +1,18 @@
 {
     "cSpell.words": [
+        "autoincrement",
         "DBTX",
         "jackc",
         "labasubagia",
+        "notnull",
+        "nullzero",
         "pgconn",
         "pgdialect",
         "pgxpool",
         "realworld",
         "sslmode",
         "stdlib",
+        "Upsert",
         "uptrace"
     ]
 }

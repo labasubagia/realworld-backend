@@ -12,14 +12,14 @@ func NewService(repo port.Repository) port.Service {
 	return &service{
 		repo:           repo,
 		articleService: NewArticleService(repo),
+		userService:    NewUserService(repo),
 	}
 }
 
-func (s *service) Article(repo port.Repository) port.ArticleService {
+func (s *service) Article() port.ArticleService {
 	return s.articleService
 }
 
-// User implements port.Service.
-func (*service) User(repo port.Repository) port.UserService {
-	panic("unimplemented")
+func (s *service) User() port.UserService {
+	return s.userService
 }

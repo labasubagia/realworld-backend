@@ -16,6 +16,10 @@ func NewUserService(repo port.Repository) port.UserService {
 	}
 }
 
-func (*userService) Create(context.Context, port.CreateArticleParams) (port.CreateArticleTxResult, error) {
-	return port.CreateArticleTxResult{}, nil
+func (s *userService) Create(ctx context.Context, req port.CreateUserTxParams) (result port.CreateUserTxResult, err error) {
+	result.User, err = s.repo.User().CreateUser(ctx, port.CreateUserParams{User: req.User})
+	if err != nil {
+		return port.CreateUserTxResult{}, err
+	}
+	return result, nil
 }

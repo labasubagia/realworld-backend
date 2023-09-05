@@ -26,7 +26,6 @@ func (r *repo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) err
 	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		return fn(NewRepository(tx))
 	})
-
 }
 
 func (r *repo) User() port.UserRepository {
