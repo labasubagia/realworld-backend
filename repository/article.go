@@ -29,13 +29,28 @@ func (r *articleRepo) CreateArticle(ctx context.Context, req port.CreateArticleP
 	return article, nil
 }
 
+func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParams) ([]domain.Tag, error) {
+	result := []domain.Tag{}
+	query := r.db.NewSelect().Model(&result)
+	if len(filter.IDs) > 0 {
+		query = query.Where("id IN (?)", bun.In(filter.IDs))
+	}
+	if len(filter.Names) > 0 {
+		query = query.Where("name IN (?)", bun.In(filter.Names))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.Tag{}, err
+	}
+	return result, nil
+}
+
 func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsParams) ([]domain.Tag, error) {
 	if len(arg.Tags) == 0 {
 		return []domain.Tag{}, errors.New("tags cannot be empty")
 	}
 
-	existing := []domain.Tag{}
-	err := r.db.NewSelect().Model(&existing).Where("name IN (?)", bun.In(arg.Tags)).Scan(ctx)
+	existing, err := r.FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
 	if err != nil {
 		return []domain.Tag{}, err
 	}

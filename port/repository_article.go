@@ -19,8 +19,14 @@ type AssignTags struct {
 	TagIDs    []int64
 }
 
+type FilterTagParams struct {
+	IDs   []int64
+	Names []string
+}
+
 type ArticleRepository interface {
 	CreateArticle(context.Context, CreateArticleParams) (domain.Article, error)
+	FilterTags(context.Context, FilterTagParams) ([]domain.Tag, error)
 	AddTagsIfNotExists(context.Context, AddTagsParams) ([]domain.Tag, error)
 	AssignTags(context.Context, AssignTags) ([]domain.ArticleTag, error)
 }
