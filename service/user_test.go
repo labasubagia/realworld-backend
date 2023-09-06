@@ -34,12 +34,6 @@ func createUser(t *testing.T, arg port.CreateUserTxParams) (user domain.User, pa
 
 func createUserArg() port.CreateUserTxParams {
 	return port.CreateUserTxParams{
-		User: domain.User{
-			Email:    util.RandomEmail(),
-			Username: util.RandomUsername(),
-			Password: util.RandomString(8),
-			Image:    util.RandomURL(),
-			Bio:      util.RandomString(10),
-		},
+		User: domain.RandomUser(),
 	}
 }

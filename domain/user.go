@@ -38,6 +38,16 @@ func NewUser(arg User) (User, error) {
 	return user, nil
 }
 
+func RandomUser() User {
+	return User{
+		Email:    util.RandomEmail(),
+		Username: util.RandomUsername(),
+		Password: util.RandomString(8),
+		Image:    util.RandomURL(),
+		Bio:      util.RandomString(10),
+	}
+}
+
 func (user *User) SetEmail(email string) error {
 	if err := util.ValidateEmail(email); err != nil {
 		return err

@@ -66,13 +66,7 @@ func createArticle(t *testing.T, arg port.CreateArticleTxParams) port.CreateArti
 
 func createArticleArg(author domain.User) port.CreateArticleTxParams {
 	return port.CreateArticleTxParams{
-		Article: domain.Article{
-			AuthorID:    author.ID,
-			Title:       util.RandomString(10),
-			Description: util.RandomString(15),
-			Slug:        util.RandomString(5),
-			Body:        util.RandomString(20),
-		},
-		Tags: []string{util.RandomString(6), util.RandomString(7)},
+		Article: domain.RandomArticle(author),
+		Tags:    []string{util.RandomString(6), util.RandomString(7)},
 	}
 }

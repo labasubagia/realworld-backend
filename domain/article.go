@@ -3,6 +3,7 @@ package domain
 import (
 	"time"
 
+	"github.com/labasubagia/realworld-backend/util"
 	"github.com/uptrace/bun"
 )
 
@@ -16,6 +17,16 @@ type Article struct {
 	Body          string    `bun:"body,notnull"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+}
+
+func RandomArticle(author User) Article {
+	return Article{
+		AuthorID:    author.ID,
+		Title:       util.RandomString(10),
+		Description: util.RandomString(15),
+		Slug:        util.RandomString(5),
+		Body:        util.RandomString(20),
+	}
 }
 
 type Tag struct {
