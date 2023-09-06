@@ -11,11 +11,63 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomArticle(t *testing.T) domain.Article {
+func TestCreateArticleOK(t *testing.T) {
 	user, _ := createRandomUser(t)
-	arg := port.CreateArticleTxParams{
+	createRandomArticle(t, user)
+}
+
+func TestCreateArticleOkWithSameTags(t *testing.T) {
+	ctx := context.Background()
+
+	author, _ := createRandomUser(t)
+	arg := createArticleArg(author)
+
+	// 2 article with tags
+	// only len(arg.Tags) expected in DB
+	createArticle(t, arg)
+	createArticle(t, arg)
+
+	// 1 article without tags
+	// no additional tags expected in DB
+	arg2 := createArticleArg(author)
+	arg2.Tags = []string{}
+	createArticle(t, arg2)
+
+	// tags to have len = len(arg.Tags)
+	tags, err := testRepo.Article().FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
+	require.Nil(t, err)
+	require.Len(t, tags, len(arg.Tags))
+}
+
+func createRandomArticle(t *testing.T, author domain.User) port.CreateArticleTxResult {
+	return createArticle(t, createArticleArg(author))
+}
+
+func createArticle(t *testing.T, arg port.CreateArticleTxParams) port.CreateArticleTxResult {
+	result, err := testService.Article().Create(context.Background(), arg)
+	resultTags := []string{}
+	for _, tag := range result.Tags {
+		resultTags = append(resultTags, tag.Name)
+	}
+	sort.Strings(arg.Tags)
+	sort.Strings(resultTags)
+
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, arg.Article.AuthorID, result.Article.AuthorID)
+	require.Equal(t, arg.Article.Title, result.Article.Title)
+	require.Equal(t, arg.Article.Slug, result.Article.Slug)
+	require.Equal(t, arg.Article.Description, result.Article.Description)
+	require.Equal(t, arg.Article.Body, result.Article.Body)
+	require.Equal(t, arg.Tags, resultTags)
+	require.Len(t, resultTags, len(arg.Tags))
+	return result
+}
+
+func createArticleArg(author domain.User) port.CreateArticleTxParams {
+	return port.CreateArticleTxParams{
 		Article: domain.Article{
-			AuthorID:    user.ID,
+			AuthorID:    author.ID,
 			Title:       util.RandomString(10),
 			Description: util.RandomString(15),
 			Slug:        util.RandomString(5),
@@ -23,25 +75,4 @@ func createRandomArticle(t *testing.T) domain.Article {
 		},
 		Tags: []string{util.RandomString(6), util.RandomString(7)},
 	}
-	result, err := testService.Article().Create(context.Background(), arg)
-	require.Nil(t, err)
-	require.NotEmpty(t, result)
-	require.Equal(t, user.ID, result.Article.AuthorID)
-	require.Equal(t, arg.Article.Title, result.Article.Title)
-	require.Equal(t, arg.Article.Slug, result.Article.Slug)
-	require.Equal(t, arg.Article.Description, result.Article.Description)
-	require.Equal(t, arg.Article.Body, result.Article.Body)
-
-	resultTags := []string{}
-	for _, tag := range result.Tags {
-		resultTags = append(resultTags, tag.Name)
-	}
-	sort.Strings(arg.Tags)
-	sort.Strings(resultTags)
-	require.Equal(t, arg.Tags, resultTags)
-	return result.Article
-}
-
-func TestCreateArticleOK(t *testing.T) {
-	createRandomArticle(t)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
+var testRepo port.Repository
 var testService port.Service
 
 func TestMain(m *testing.M) {
@@ -23,7 +24,7 @@ func TestMain(m *testing.M) {
 	sqlDB := stdlib.OpenDB(*config)
 	db := bun.NewDB(sqlDB, pgdialect.New())
 
-	repo := repository.NewRepository(db)
-	testService = service.NewService(repo)
+	testRepo = repository.NewRepository(db)
+	testService = service.NewService(testRepo)
 	os.Exit(m.Run())
 }
