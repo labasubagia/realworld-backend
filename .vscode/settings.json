@@ -12,6 +12,7 @@
         "realworld",
         "sslmode",
         "stdlib",
+        "stretchr",
         "Upsert",
         "uptrace"
     ]
