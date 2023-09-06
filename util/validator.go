@@ -43,13 +43,6 @@ func ValidateEmail(value string) error {
 	return nil
 }
 
-func ValidateEmailID(value int64) error {
-	if value <= 0 {
-		return fmt.Errorf("must be a positive integer")
-	}
-	return nil
-}
-
 func ValidateID(value int64) error {
 	if value <= 0 {
 		return fmt.Errorf("id must be positive integer")
