@@ -1,8 +1,10 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/labasubagia/realworld-backend/util"
 	"github.com/uptrace/bun"
 )
 
@@ -16,4 +18,55 @@ type User struct {
 	Bio           string    `bun:"bio"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+}
+
+func NewUser(arg User) (User, error) {
+	user := User{}
+	if err := user.SetEmail(arg.Email); err != nil {
+		return user, fmt.Errorf("email %w", err)
+	}
+	if err := user.SetUsername(arg.Username); err != nil {
+		return user, fmt.Errorf("username %w", err)
+	}
+	if err := user.SetImageURL(arg.Image); err != nil {
+		return user, fmt.Errorf("image %w", err)
+	}
+	if err := user.SetPassword(arg.Password); err != nil {
+		return user, fmt.Errorf("password %w", err)
+	}
+	user.Bio = arg.Bio
+	return user, nil
+}
+
+func (user *User) SetEmail(email string) error {
+	if err := util.ValidateEmail(email); err != nil {
+		return err
+	}
+	user.Email = email
+	return nil
+}
+
+func (user *User) SetPassword(password string) error {
+	hashedPassword, err := util.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	user.Password = hashedPassword
+	return nil
+}
+
+func (user *User) SetUsername(username string) error {
+	if err := util.ValidateUsername(username); err != nil {
+		return err
+	}
+	user.Username = username
+	return nil
+}
+
+func (user *User) SetImageURL(url string) error {
+	if err := util.ValidateURL(url); err != nil {
+		return err
+	}
+	user.Image = url
+	return nil
 }
