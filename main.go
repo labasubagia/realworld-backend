@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/labasubagia/realworld-backend/domain"
-	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/api"
 	"github.com/labasubagia/realworld-backend/repository"
 	"github.com/labasubagia/realworld-backend/service"
 	"github.com/uptrace/bun"
@@ -24,38 +22,8 @@ func main() {
 
 	repo := repository.NewRepository(db)
 	svc := service.NewService(repo)
-
-	// server := api.NewServer(svc)
-	// if err := server.Start(); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// just try here
-	ctx := context.Background()
-	userArg := port.CreateUserTxParams{
-		User: domain.User{
-			Email:    "user@mail.com",
-			Username: "user",
-			Password: "12345678",
-		},
+	server := api.NewServer(svc)
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
 	}
-	userTx, err := svc.User().Create(ctx, userArg)
-	if err != nil {
-		log.Fatal("failed", err)
-	}
-	articleArg := port.CreateArticleTxParams{
-		Article: domain.Article{
-			AuthorID:    userTx.User.ID,
-			Title:       "title1",
-			Slug:        "title1",
-			Description: "desc of title1",
-			Body:        "body of title1",
-		},
-		Tags: []string{"first", "second"},
-	}
-	articleTx, err := svc.Article().Create(ctx, articleArg)
-	if err != nil {
-		log.Fatal("fa", err)
-	}
-	log.Println(articleTx.Article.Title, articleTx.Tags)
 }
