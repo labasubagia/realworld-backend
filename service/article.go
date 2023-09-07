@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/labasubagia/realworld-backend/port"
 )
@@ -30,6 +31,9 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		}
 
 		// add tags if not exists
+		for i, tag := range arg.Tags {
+			arg.Tags[i] = strings.ToLower(tag)
+		}
 		result.Tags, err = r.Article().AddTagsIfNotExists(ctx, port.AddTagsParams{Tags: arg.Tags})
 		if err != nil {
 			return err

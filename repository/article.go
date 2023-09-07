@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/labasubagia/realworld-backend/domain"
 	"github.com/labasubagia/realworld-backend/port"
@@ -24,7 +23,7 @@ func (r *articleRepo) CreateArticle(ctx context.Context, req port.CreateArticleP
 	article := req.Article
 	_, err := r.db.NewInsert().Model(&article).Exec(ctx)
 	if err != nil {
-		return domain.Article{}, err
+		return domain.Article{}, AsServiceError(err)
 	}
 	return article, nil
 }
@@ -40,7 +39,7 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParam
 	}
 	err := query.Scan(ctx)
 	if err != nil {
-		return []domain.Tag{}, err
+		return []domain.Tag{}, AsServiceError(err)
 	}
 	return result, nil
 }
@@ -52,25 +51,24 @@ func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPa
 
 	existing, err := r.FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
 	if err != nil {
-		return []domain.Tag{}, err
+		return []domain.Tag{}, AsServiceError(err)
 	}
 	existMap := map[string]domain.Tag{}
 	for _, tag := range existing {
-		existMap[strings.ToLower(tag.Name)] = tag
+		existMap[tag.Name] = tag
 	}
 
 	newTags := []domain.Tag{}
 	for _, tag := range arg.Tags {
-		name := strings.ToLower(tag)
-		if _, exist := existMap[name]; exist {
+		if _, exist := existMap[tag]; exist {
 			continue
 		}
-		newTags = append(newTags, domain.Tag{Name: name})
+		newTags = append(newTags, domain.Tag{Name: tag})
 	}
 	if len(newTags) > 0 {
-		_, err = r.db.NewInsert().Model(&newTags).Exec(ctx)
+		_, err = r.db.NewInsert().Model(&newTags).Returning("*").Exec(ctx)
 		if err != nil {
-			return []domain.Tag{}, err
+			return []domain.Tag{}, AsServiceError(err)
 		}
 	}
 
@@ -92,7 +90,7 @@ func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]do
 	}
 	_, err := r.db.NewInsert().Model(&articleTags).Exec(ctx)
 	if err != nil {
-		return []domain.ArticleTag{}, err
+		return []domain.ArticleTag{}, AsServiceError(err)
 	}
 
 	return articleTags, nil
