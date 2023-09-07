@@ -1,30 +1,29 @@
 package service_test
 
 import (
+	"log"
 	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/labasubagia/realworld-backend/port"
 	"github.com/labasubagia/realworld-backend/repository"
 	"github.com/labasubagia/realworld-backend/service"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/labasubagia/realworld-backend/util"
 )
 
 var testRepo port.Repository
 var testService port.Service
 
 func TestMain(m *testing.M) {
-	config, err := pgx.ParseConfig("postgres://postgres:postgres@localhost:5432/realworld?sslmode=disable")
+	config, err := util.LoadConfig("../.env.test")
 	if err != nil {
-		panic(err)
+		log.Fatal("failed load config", err)
 	}
-	sqlDB := stdlib.OpenDB(*config)
-	db := bun.NewDB(sqlDB, pgdialect.New())
-
-	testRepo = repository.NewRepository(db)
+	testRepo, err = repository.NewSQLRepository(config)
+	if err != nil {
+		log.Fatal("failed to init repository", err)
+	}
 	testService = service.NewService(testRepo)
-	os.Exit(m.Run())
+	code := m.Run()
+	os.Exit(code)
 }
