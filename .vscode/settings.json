@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
         "autoincrement",
+        "bundebug",
         "DBTX",
         "jackc",
         "labasubagia",
+        "mapstructure",
         "notnull",
         "nullzero",
         "pgconn",
@@ -15,5 +17,8 @@
         "stretchr",
         "Upsert",
         "uptrace"
+    ],
+    "go.testFlags": [
+        "-count=1"
     ]
 }
