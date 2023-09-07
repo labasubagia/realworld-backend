@@ -30,7 +30,7 @@ func RandomArticle(author User) Article {
 }
 
 type Tag struct {
-	bun.BaseModel `bu:"table:tags,alias:t"`
+	bun.BaseModel `bun:"table:tags,alias:t"`
 	ID            int64  `bun:"id,pk,autoincrement"`
 	Name          string `bun:"name,notnull"`
 }
