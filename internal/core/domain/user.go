@@ -8,6 +8,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
+const UserDefaultImage string = "https://api.realworld.io/images/demo-avatar.png"
+
 type User struct {
 	bun.BaseModel `bu:"table:users,alias:u"`
 	ID            int64     `bun:"id,pk,autoincrement"`
@@ -28,7 +30,11 @@ func NewUser(arg User) (User, error) {
 	if err := user.SetUsername(arg.Username); err != nil {
 		return user, fmt.Errorf("username %w", err)
 	}
-	if err := user.SetImageURL(arg.Image); err != nil {
+	image := UserDefaultImage
+	if arg.Image != "" {
+		image = arg.Image
+	}
+	if err := user.SetImageURL(image); err != nil {
 		return user, fmt.Errorf("image %w", err)
 	}
 	if err := user.SetPassword(arg.Password); err != nil {
@@ -43,8 +49,6 @@ func RandomUser() User {
 		Email:    util.RandomEmail(),
 		Username: util.RandomUsername(),
 		Password: util.RandomString(8),
-		Image:    util.RandomURL(),
-		Bio:      util.RandomString(10),
 	}
 }
 
