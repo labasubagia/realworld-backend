@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("failed to init repository", err)
 	}
 	svc := service.NewService(repo)
-	server := handler.NewServer(svc)
+	server := handler.NewServer(config, svc)
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}

@@ -6,9 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
 type Server struct {
+	config  util.Config
 	router  *chi.Mux
 	service port.Service
 }
@@ -22,8 +24,9 @@ func (server *Server) setupRouter() {
 	server.router = router
 }
 
-func NewServer(service port.Service) port.Server {
+func NewServer(config util.Config, service port.Service) port.Server {
 	server := &Server{
+		config:  config,
 		service: service,
 	}
 	server.setupRouter()
@@ -31,5 +34,5 @@ func NewServer(service port.Service) port.Server {
 }
 
 func (server *Server) Start() error {
-	return http.ListenAndServe(":8080", server.router)
+	return http.ListenAndServe(server.config.HTTPServerAddress, server.router)
 }
