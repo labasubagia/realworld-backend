@@ -1,25 +1,45 @@
 package service
 
-import "github.com/labasubagia/realworld-backend/internal/core/port"
+import (
+	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util/token"
+)
 
-type service struct {
-	repo           port.Repository
+type serviceProperty struct {
+	config     util.Config
+	repo       port.Repository
+	tokenMaker port.TokenMaker
+}
+
+type services struct {
+	property       serviceProperty
 	articleService port.ArticleService
 	userService    port.UserService
 }
 
-func NewService(repo port.Repository) port.Service {
-	return &service{
-		repo:           repo,
-		articleService: NewArticleService(repo),
-		userService:    NewUserService(repo),
+func NewService(config util.Config, repo port.Repository) (port.Service, error) {
+	tokenMaker, err := token.NewJWTMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, err
 	}
+	property := serviceProperty{
+		config:     config,
+		repo:       repo,
+		tokenMaker: tokenMaker,
+	}
+	svc := services{
+		property:       property,
+		articleService: NewArticleService(property),
+		userService:    NewUserService(property),
+	}
+	return &svc, nil
 }
 
-func (s *service) Article() port.ArticleService {
+func (s *services) Article() port.ArticleService {
 	return s.articleService
 }
 
-func (s *service) User() port.UserService {
+func (s *services) User() port.UserService {
 	return s.userService
 }

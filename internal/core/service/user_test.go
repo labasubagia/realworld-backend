@@ -24,13 +24,13 @@ func createRandomUser(t *testing.T) (user domain.User, password string) {
 	return createUser(t, createUserArg())
 }
 
-func createUser(t *testing.T, arg port.CreateUserTxParams) (user domain.User, password string) {
+func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, password string) {
 	image := arg.User.Image
 	if image == "" {
 		image = domain.UserDefaultImage
 	}
 
-	result, err := testService.User().Create(context.Background(), arg)
+	result, err := testService.User().Register(context.Background(), arg)
 
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
@@ -43,8 +43,8 @@ func createUser(t *testing.T, arg port.CreateUserTxParams) (user domain.User, pa
 	return user, arg.User.Password
 }
 
-func createUserArg() port.CreateUserTxParams {
-	return port.CreateUserTxParams{
+func createUserArg() port.RegisterUserParams {
+	return port.RegisterUserParams{
 		User: domain.RandomUser(),
 	}
 }

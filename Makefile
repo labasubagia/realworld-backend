@@ -1,5 +1,5 @@
 DB_URL=postgresql://postgres:postgres@localhost:5432/realworld?sslmode=disable
-DB_MIGRATION_PATH=db/migration
+DB_MIGRATION_PATH=internal/adapter/repository/sql/db/migration
 
 migrate_up:
 	migrate -path "$(DB_MIGRATION_PATH)" -database "$(DB_URL)" -verbose up

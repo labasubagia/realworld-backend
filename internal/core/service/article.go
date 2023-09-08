@@ -8,17 +8,17 @@ import (
 )
 
 type articleService struct {
-	repo port.Repository
+	property serviceProperty
 }
 
-func NewArticleService(repo port.Repository) port.ArticleService {
+func NewArticleService(property serviceProperty) port.ArticleService {
 	return &articleService{
-		repo: repo,
+		property: property,
 	}
 }
 
 func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxParams) (result port.CreateArticleTxResult, err error) {
-	err = s.repo.Atomic(ctx, func(r port.Repository) error {
+	err = s.property.repo.Atomic(ctx, func(r port.Repository) error {
 		// create article
 		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticleParams{Article: arg.Article})
 		if err != nil {

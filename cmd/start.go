@@ -19,7 +19,10 @@ func startCmd(config util.Config) *cobra.Command {
 			if err != nil {
 				log.Fatal("failed to init repository", err)
 			}
-			svc := service.NewService(repo)
+			svc, err := service.NewService(config, repo)
+			if err != nil {
+				log.Fatal("failed to init service", err)
+			}
 			server := handler.NewServer(config, svc)
 			if err := server.Start(); err != nil {
 				log.Fatal("failed to start server", err)

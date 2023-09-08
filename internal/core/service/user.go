@@ -2,29 +2,37 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
 type userService struct {
-	repo port.Repository
+	property serviceProperty
 }
 
-func NewUserService(repo port.Repository) port.UserService {
+func NewUserService(property serviceProperty) port.UserService {
 	return &userService{
-		repo: repo,
+		property: property,
 	}
 }
 
-func (s *userService) Create(ctx context.Context, req port.CreateUserTxParams) (result port.CreateUserTxResult, err error) {
+func (s *userService) Register(ctx context.Context, req port.RegisterUserParams) (result port.RegisterUserResult, err error) {
 	reqUser, err := domain.NewUser(req.User)
 	if err != nil {
-		return port.CreateUserTxResult{}, err
+		return port.RegisterUserResult{}, err
 	}
-	result.User, err = s.repo.User().CreateUser(ctx, port.CreateUserParams{User: reqUser})
+	result.User, err = s.property.repo.User().CreateUser(ctx, port.CreateUserParams{User: reqUser})
 	if err != nil {
-		return port.CreateUserTxResult{}, err
+		return port.RegisterUserResult{}, err
 	}
+
+	token, _, err := s.property.tokenMaker.CreateToken(result.User.Username, 2*time.Hour)
+	if err != nil {
+		return port.RegisterUserResult{}, err
+	}
+	result.Token = token
+
 	return result, nil
 }

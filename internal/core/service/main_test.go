@@ -23,7 +23,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("failed to init repository", err)
 	}
-	testService = service.NewService(testRepo)
+	testService, err = service.NewService(config, testRepo)
+	if err != nil {
+		log.Fatal("failed to init service", err)
+	}
 	code := m.Run()
 	os.Exit(code)
 }

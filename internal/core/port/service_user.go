@@ -6,15 +6,15 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 )
 
-type CreateUserTxParams struct {
-	User      domain.User
-	AfterFunc func(domain.User) error
-}
-
-type CreateUserTxResult struct {
+type RegisterUserParams struct {
 	User domain.User
 }
 
+type RegisterUserResult struct {
+	User  domain.User
+	Token string
+}
+
 type UserService interface {
-	Create(context.Context, CreateUserTxParams) (CreateUserTxResult, error)
+	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
 }
