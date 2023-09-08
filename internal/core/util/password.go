@@ -1,15 +1,14 @@
 package util
 
 import (
-	"fmt"
-
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %w", err)
+		return "", exception.New(exception.TypePermissionDenied, "invalid password", err)
 	}
 	return string(hashedPassword), nil
 }

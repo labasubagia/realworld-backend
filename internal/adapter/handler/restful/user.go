@@ -8,22 +8,26 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
-type User struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Username string `json:"username"`
-}
-
-type RegisterRequest struct {
-	User User `json:"user"`
-}
-
-type RegisterResponse struct {
+type UserResult struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Bio      string `json:"bio"`
 	Image    string `json:"image"`
 	Token    string `json:"token"`
+}
+
+type UserRegisterParams struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type RegisterRequest struct {
+	User UserRegisterParams `json:"user"`
+}
+
+type RegisterResponse struct {
+	User UserResult `json:"user"`
 }
 
 func (server *Server) Register(c *gin.Context) {
@@ -46,11 +50,56 @@ func (server *Server) Register(c *gin.Context) {
 	}
 
 	res := RegisterResponse{
-		Email:    result.User.Email,
-		Username: result.User.Username,
-		Bio:      result.User.Bio,
-		Image:    result.User.Image,
-		Token:    result.Token,
+		User: UserResult{
+			Email:    result.User.Email,
+			Username: result.User.Username,
+			Bio:      result.User.Bio,
+			Image:    result.User.Email,
+			Token:    result.Token,
+		},
+	}
+	c.JSON(http.StatusCreated, res)
+}
+
+type UserLoginParams struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
+	User UserLoginParams `json:"user"`
+}
+
+type LoginResponse struct {
+	User UserResult `json:"user"`
+}
+
+func (server *Server) Login(c *gin.Context) {
+	req := LoginRequest{}
+	if err := c.BindJSON(&req); err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	result, err := server.service.User().Login(c, port.LoginUserParams{
+		User: domain.User{
+			Email:    req.User.Email,
+			Password: req.User.Password,
+		},
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	res := LoginResponse{
+		User: UserResult{
+			Email:    result.User.Email,
+			Username: result.User.Username,
+			Bio:      result.User.Bio,
+			Image:    result.User.Email,
+			Token:    result.Token,
+		},
 	}
 	c.JSON(http.StatusCreated, res)
 }

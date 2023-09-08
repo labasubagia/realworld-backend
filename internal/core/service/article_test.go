@@ -14,14 +14,14 @@ import (
 )
 
 func TestCreateArticleOK(t *testing.T) {
-	author, _ := createRandomUser(t)
+	author, _, _ := createRandomUser(t)
 	createRandomArticle(t, author)
 }
 
 func TestCreateArticleOkWithTags(t *testing.T) {
 	ctx := context.Background()
 
-	author, _ := createRandomUser(t)
+	author, _, _ := createRandomUser(t)
 	arg1 := createArticleArg(author)
 
 	// 2 article with same tags
@@ -50,7 +50,7 @@ func TestCreateArticleOkWithTags(t *testing.T) {
 func TestCreateArticleConcurrentOK(t *testing.T) {
 
 	// make valid data
-	author, _ := createRandomUser(t)
+	author, _, _ := createRandomUser(t)
 	arg := createArticleArg(author)
 
 	// concurrent process

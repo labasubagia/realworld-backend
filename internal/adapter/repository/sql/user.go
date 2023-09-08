@@ -26,3 +26,19 @@ func (r *userRepo) CreateUser(ctx context.Context, req port.CreateUserParams) (d
 	}
 	return user, nil
 }
+
+func (r *userRepo) FilterUser(ctx context.Context, filter port.FilterUserParams) ([]domain.User, error) {
+	users := []domain.User{}
+	query := r.db.NewSelect().Model(&users)
+	if len(filter.Emails) > 0 {
+		query = query.Where("email IN (?)", bun.In(filter.Emails))
+	}
+	if len(filter.Usernames) > 0 {
+		query = query.Where("username IN (?)", bun.In(filter.Usernames))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.User{}, intoException(err)
+	}
+	return users, nil
+}

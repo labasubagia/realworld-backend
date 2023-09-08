@@ -36,6 +36,10 @@ func NewService(config util.Config, repo port.Repository) (port.Service, error) 
 	return &svc, nil
 }
 
+func (s *services) TokenMaker() token.Maker {
+	return s.property.tokenMaker
+}
+
 func (s *services) Article() port.ArticleService {
 	return s.articleService
 }

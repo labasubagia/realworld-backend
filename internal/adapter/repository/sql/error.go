@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
@@ -20,6 +21,9 @@ func postgresErrCode(err error) string {
 }
 
 func intoException(err error) *exception.Exception {
+	if err == pgx.ErrNoRows {
+		return exception.New(exception.TypeNotFound, err.Error(), err)
+	}
 	kind, ok := mapException[postgresErrCode(err)]
 	if ok {
 		return exception.New(kind, err.Error(), err)

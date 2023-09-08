@@ -35,6 +35,7 @@ func (server *Server) setupRouter() {
 		ctx.JSON(200, gin.H{"message": "Hello World!"})
 	})
 	router.POST("/users", server.Register)
+	router.POST("/users/login", server.Login)
 	server.router = router
 }
 

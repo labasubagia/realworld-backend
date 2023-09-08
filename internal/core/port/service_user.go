@@ -15,6 +15,16 @@ type RegisterUserResult struct {
 	Token string
 }
 
+type LoginUserParams struct {
+	User domain.User
+}
+
+type LoginUserResult struct {
+	User  domain.User
+	Token string
+}
+
 type UserService interface {
 	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
+	Login(context.Context, LoginUserParams) (LoginUserResult, error)
 }
