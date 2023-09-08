@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	repository "github.com/labasubagia/realworld-backend/internal/adapter/repository/sql"
+	"github.com/labasubagia/realworld-backend/internal/adapter/repository"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/service"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("failed load config", err)
 	}
-	testRepo, err = repository.NewSQLRepository(config)
+	testRepo, err = repository.NewRepository(config)
 	if err != nil {
 		log.Fatal("failed to init repository", err)
 	}
