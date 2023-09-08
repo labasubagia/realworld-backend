@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/labasubagia/realworld-backend/domain"
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
 )
 
 type CreateUserTxParams struct {

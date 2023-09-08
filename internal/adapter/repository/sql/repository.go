@@ -1,12 +1,12 @@
-package repository
+package sql
 
 import (
 	"context"
 	"database/sql"
 
-	"github.com/labasubagia/realworld-backend/db"
-	"github.com/labasubagia/realworld-backend/port"
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/adapter/repository/sql/db"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/uptrace/bun"
 )
 
@@ -21,7 +21,7 @@ func NewSQLRepository(config util.Config) (port.Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	return create(db.GetDB()), nil
+	return create(db.DB()), nil
 }
 
 func (r *sqlRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) error {

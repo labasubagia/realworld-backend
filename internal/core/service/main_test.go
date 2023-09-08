@@ -5,17 +5,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/labasubagia/realworld-backend/port"
-	"github.com/labasubagia/realworld-backend/repository"
-	"github.com/labasubagia/realworld-backend/service"
-	"github.com/labasubagia/realworld-backend/util"
+	repository "github.com/labasubagia/realworld-backend/internal/adapter/repository/sql"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/service"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
 var testRepo port.Repository
 var testService port.Service
 
 func TestMain(m *testing.M) {
-	config, err := util.LoadConfig("../.env.test")
+	config, err := util.LoadConfig("../../../.env.test")
 	if err != nil {
 		log.Fatal("failed load config", err)
 	}

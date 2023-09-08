@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
 type articleService struct {

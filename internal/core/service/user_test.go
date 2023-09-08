@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/labasubagia/realworld-backend/domain"
-	"github.com/labasubagia/realworld-backend/port"
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/stretchr/testify/require"
 )
 

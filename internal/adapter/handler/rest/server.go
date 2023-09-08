@@ -1,11 +1,11 @@
-package api
+package rest
 
 import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
 type Server struct {

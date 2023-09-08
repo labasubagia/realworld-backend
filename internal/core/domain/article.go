@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/uptrace/bun"
 )
 

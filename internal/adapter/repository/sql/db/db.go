@@ -9,8 +9,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/labasubagia/realworld-backend/db/migration"
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/adapter/repository/sql/db/migration"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/extra/bundebug"
@@ -36,7 +36,7 @@ func New(config util.Config) (*DB, error) {
 	return database, nil
 }
 
-func (db *DB) GetDB() *bun.DB {
+func (db *DB) DB() *bun.DB {
 	return db.db
 }
 

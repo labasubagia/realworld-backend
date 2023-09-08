@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/labasubagia/realworld-backend/api"
-	"github.com/labasubagia/realworld-backend/repository"
-	"github.com/labasubagia/realworld-backend/service"
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/adapter/handler/rest"
+	repository "github.com/labasubagia/realworld-backend/internal/adapter/repository/sql"
+	"github.com/labasubagia/realworld-backend/internal/core/service"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("failed to init repository", err)
 	}
 	svc := service.NewService(repo)
-	server := api.NewServer(svc)
+	server := rest.NewServer(svc)
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}

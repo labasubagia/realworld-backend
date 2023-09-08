@@ -1,8 +1,8 @@
-package repository
+package sql
 
 import (
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
 type Err pgconn.PgError

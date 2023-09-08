@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/labasubagia/realworld-backend/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 )

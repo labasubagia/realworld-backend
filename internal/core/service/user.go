@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/labasubagia/realworld-backend/domain"
-	"github.com/labasubagia/realworld-backend/port"
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
 type userService struct {
