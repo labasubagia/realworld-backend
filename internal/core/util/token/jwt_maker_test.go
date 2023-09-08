@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,12 +46,15 @@ func TestExpiredJWTToken(t *testing.T) {
 
 	payload, err = maker.VerifyToken(token)
 	require.Error(t, err)
-	require.EqualError(t, err, port.ErrExpiredToken.Error())
+
+	fail, ok := err.(*exception.Exception)
+	require.True(t, ok)
+	require.Equal(t, exception.TypeTokenExpired, fail.Type)
 	require.Nil(t, payload)
 }
 
 func TestInvalidJWTToken(t *testing.T) {
-	payload, err := port.NewPayload(util.RandomUsername(), time.Minute)
+	payload, err := NewPayload(util.RandomUsername(), time.Minute)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)
@@ -63,6 +66,9 @@ func TestInvalidJWTToken(t *testing.T) {
 
 	payload, err = maker.VerifyToken(token)
 	require.Error(t, err)
-	require.EqualError(t, err, port.ErrInvalidToken.Error())
+
+	fail, ok := err.(*exception.Exception)
+	require.True(t, ok)
+	require.Equal(t, exception.TypeTokenInvalid, fail.Type)
 	require.Nil(t, payload)
 }

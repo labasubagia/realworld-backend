@@ -1,10 +1,10 @@
 package domain
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/labasubagia/realworld-backend/internal/core/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"github.com/uptrace/bun"
 )
 
@@ -23,23 +23,30 @@ type User struct {
 }
 
 func NewUser(arg User) (User, error) {
+	validator := exception.Validation()
+
 	user := User{}
 	if err := user.SetEmail(arg.Email); err != nil {
-		return user, fmt.Errorf("email %w", err)
+		validator.AddError("email", err.Error())
 	}
 	if err := user.SetUsername(arg.Username); err != nil {
-		return user, fmt.Errorf("username %w", err)
+		validator.AddError("username", err.Error())
 	}
 	image := UserDefaultImage
 	if arg.Image != "" {
 		image = arg.Image
 	}
 	if err := user.SetImageURL(image); err != nil {
-		return user, fmt.Errorf("image %w", err)
+		validator.AddError("image", err.Error())
 	}
 	if err := user.SetPassword(arg.Password); err != nil {
-		return user, fmt.Errorf("password %w", err)
+		validator.AddError("password", err.Error())
 	}
+
+	if validator.HasError() {
+		return user, validator
+	}
+
 	user.Bio = arg.Bio
 	return user, nil
 }

@@ -2,10 +2,10 @@ package sql
 
 import (
 	"context"
-	"errors"
 
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"github.com/uptrace/bun"
 )
 
@@ -23,7 +23,7 @@ func (r *articleRepo) CreateArticle(ctx context.Context, req port.CreateArticleP
 	article := req.Article
 	_, err := r.db.NewInsert().Model(&article).Exec(ctx)
 	if err != nil {
-		return domain.Article{}, AsServiceError(err)
+		return domain.Article{}, intoException(err)
 	}
 	return article, nil
 }
@@ -39,19 +39,19 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParam
 	}
 	err := query.Scan(ctx)
 	if err != nil {
-		return []domain.Tag{}, AsServiceError(err)
+		return []domain.Tag{}, intoException(err)
 	}
 	return result, nil
 }
 
 func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsParams) ([]domain.Tag, error) {
 	if len(arg.Tags) == 0 {
-		return []domain.Tag{}, errors.New("tags cannot be empty")
+		return []domain.Tag{}, exception.New(exception.TypeValidation, "tags empty", nil)
 	}
 
 	existing, err := r.FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
 	if err != nil {
-		return []domain.Tag{}, AsServiceError(err)
+		return []domain.Tag{}, intoException(err)
 	}
 	existMap := map[string]domain.Tag{}
 	for _, tag := range existing {
@@ -68,7 +68,7 @@ func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPa
 	if len(newTags) > 0 {
 		_, err = r.db.NewInsert().Model(&newTags).Returning("*").Exec(ctx)
 		if err != nil {
-			return []domain.Tag{}, AsServiceError(err)
+			return []domain.Tag{}, intoException(err)
 		}
 	}
 
@@ -78,7 +78,7 @@ func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPa
 
 func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]domain.ArticleTag, error) {
 	if len(arg.TagIDs) == 0 {
-		return []domain.ArticleTag{}, errors.New("tag ids cannot be empty")
+		return []domain.ArticleTag{}, exception.New(exception.TypeValidation, "tags empty", nil)
 	}
 
 	articleTags := make([]domain.ArticleTag, len(arg.TagIDs))
@@ -90,7 +90,7 @@ func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]do
 	}
 	_, err := r.db.NewInsert().Model(&articleTags).Exec(ctx)
 	if err != nil {
-		return []domain.ArticleTag{}, AsServiceError(err)
+		return []domain.ArticleTag{}, intoException(err)
 	}
 
 	return articleTags, nil

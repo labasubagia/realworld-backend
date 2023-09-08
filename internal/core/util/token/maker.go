@@ -1,18 +1,13 @@
-package port
+package token
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
-var (
-	ErrExpiredToken = errors.New("token has expired")
-	ErrInvalidToken = errors.New("token is invalid")
-)
-
-type TokenMaker interface {
+type Maker interface {
 	CreateToken(username string, duration time.Duration) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
 }
@@ -27,7 +22,7 @@ type Payload struct {
 func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
-		return nil, err
+		return nil, exception.New(exception.TypeInternal, "failed generate token id", err)
 	}
 	payload := &Payload{
 		ID:        tokenID,
@@ -40,7 +35,7 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 
 func (payload Payload) Valid() error {
 	if time.Now().After(payload.ExpiredAt) {
-		return ErrExpiredToken
+		return exception.New(exception.TypeTokenExpired, "token expired", nil)
 	}
 	return nil
 }

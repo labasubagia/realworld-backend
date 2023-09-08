@@ -3,6 +3,8 @@
         "autoincrement",
         "bundebug",
         "DBTX",
+        "dgrijalva",
+        "gonic",
         "jackc",
         "labasubagia",
         "mapstructure",

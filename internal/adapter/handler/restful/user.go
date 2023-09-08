@@ -29,7 +29,7 @@ type RegisterResponse struct {
 func (server *Server) Register(c *gin.Context) {
 	req := RegisterRequest{}
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		errorHandler(c, err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (server *Server) Register(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		errorHandler(c, err)
 		return
 	}
 

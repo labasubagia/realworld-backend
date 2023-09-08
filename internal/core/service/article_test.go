@@ -9,6 +9,7 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,11 +69,13 @@ func TestCreateArticleConcurrentOK(t *testing.T) {
 	close(chErrors)
 
 	// if there is an error
-	// it must be an isolation or unique error
+	// it must be an validation (isolation or unique error)
 	for range chErrors {
 		err := <-chErrors
 		if err != nil {
-			require.Contains(t, []error{port.ErrIsolation, port.ErrUniqueKey}, err)
+			fail, ok := err.(*exception.Exception)
+			require.True(t, ok)
+			require.Equal(t, exception.TypeValidation, fail.Type)
 		}
 	}
 

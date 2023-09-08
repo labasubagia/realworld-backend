@@ -22,7 +22,7 @@ func (r *userRepo) CreateUser(ctx context.Context, req port.CreateUserParams) (d
 	user := req.User
 	_, err := r.db.NewInsert().Model(&user).Exec(ctx)
 	if err != nil {
-		return domain.User{}, err
+		return domain.User{}, intoException(err)
 	}
 	return user, nil
 }

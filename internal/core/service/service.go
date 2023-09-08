@@ -8,8 +8,8 @@ import (
 
 type serviceProperty struct {
 	config     util.Config
+	tokenMaker token.Maker
 	repo       port.Repository
-	tokenMaker port.TokenMaker
 }
 
 type services struct {

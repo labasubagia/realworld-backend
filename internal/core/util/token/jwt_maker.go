@@ -1,12 +1,11 @@
 package token
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
 const minSecretKeySize = 32
@@ -15,15 +14,15 @@ type JWTMaker struct {
 	secretKey string
 }
 
-func NewJWTMaker(secretKey string) (port.TokenMaker, error) {
+func NewJWTMaker(secretKey string) (Maker, error) {
 	if len(secretKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
 	return &JWTMaker{secretKey}, nil
 }
 
-func (maker JWTMaker) CreateToken(username string, duration time.Duration) (string, *port.Payload, error) {
-	payload, err := port.NewPayload(username, duration)
+func (maker JWTMaker) CreateToken(username string, duration time.Duration) (string, *Payload, error) {
+	payload, err := NewPayload(username, duration)
 	if err != nil {
 		return "", payload, err
 	}
@@ -33,27 +32,30 @@ func (maker JWTMaker) CreateToken(username string, duration time.Duration) (stri
 	return token, payload, err
 }
 
-func (maker *JWTMaker) VerifyToken(token string) (*port.Payload, error) {
+func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, port.ErrInvalidToken
+			return nil, exception.New(exception.TypeTokenInvalid, "invalid token", nil)
 		}
 		return []byte(maker.secretKey), nil
 	}
 
-	jwtToken, err := jwt.ParseWithClaims(token, &port.Payload{}, keyFunc)
+	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
 	if err != nil {
 		vErr, ok := err.(*jwt.ValidationError)
-		if ok && errors.Is(vErr.Inner, port.ErrExpiredToken) {
-			return nil, port.ErrExpiredToken
+		if ok {
+			fail, ok := vErr.Inner.(*exception.Exception)
+			if ok {
+				return nil, fail
+			}
 		}
-		return nil, port.ErrInvalidToken
+		return nil, exception.New(exception.TypeTokenInvalid, "invalid token", err)
 	}
 
-	payload, ok := jwtToken.Claims.(*port.Payload)
+	payload, ok := jwtToken.Claims.(*Payload)
 	if !ok {
-		return nil, port.ErrInvalidToken
+		return nil, exception.New(exception.TypeTokenInvalid, "invalid token", nil)
 	}
 
 	return payload, nil

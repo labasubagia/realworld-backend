@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
 type articleService struct {
@@ -22,7 +23,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		// create article
 		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticleParams{Article: arg.Article})
 		if err != nil {
-			return err
+			return exception.Into(err)
 		}
 
 		// return when no tags
@@ -36,7 +37,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		}
 		result.Tags, err = r.Article().AddTagsIfNotExists(ctx, port.AddTagsParams{Tags: arg.Tags})
 		if err != nil {
-			return err
+			return exception.Into(err)
 		}
 
 		// assign tags
@@ -46,12 +47,12 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		}
 		_, err := r.Article().AssignTags(ctx, port.AssignTags{ArticleID: result.Article.ID, TagIDs: tagIDs})
 		if err != nil {
-			return err
+			return exception.Into(err)
 		}
 		return nil
 	})
 	if err != nil {
-		return port.CreateArticleTxResult{}, err
+		return port.CreateArticleTxResult{}, exception.Into(err)
 	}
 	return result, nil
 }
