@@ -46,7 +46,7 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParam
 
 func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsParams) ([]domain.Tag, error) {
 	if len(arg.Tags) == 0 {
-		return []domain.Tag{}, exception.New(exception.TypeValidation, "tags empty", nil)
+		return []domain.Tag{}, exception.Validation().AddError("tags", "empty")
 	}
 
 	existing, err := r.FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
@@ -78,7 +78,7 @@ func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPa
 
 func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]domain.ArticleTag, error) {
 	if len(arg.TagIDs) == 0 {
-		return []domain.ArticleTag{}, exception.New(exception.TypeValidation, "tags empty", nil)
+		return []domain.ArticleTag{}, exception.Validation().AddError("tags", "empty")
 	}
 
 	articleTags := make([]domain.ArticleTag, len(arg.TagIDs))
