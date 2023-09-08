@@ -3,9 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/labasubagia/realworld-backend/internal/adapter/handler"
-	repository "github.com/labasubagia/realworld-backend/internal/adapter/repository"
-	"github.com/labasubagia/realworld-backend/internal/core/service"
+	"github.com/labasubagia/realworld-backend/cmd"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
@@ -14,13 +12,9 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to load config", err)
 	}
-	repo, err := repository.NewRepository(config)
-	if err != nil {
-		log.Fatal("failed to init repository", err)
-	}
-	svc := service.NewService(repo)
-	server := handler.NewServer(config, svc)
-	if err := server.Start(); err != nil {
-		log.Fatal(err)
+	// run with go run main.go help
+	command := cmd.NewCommand(config)
+	if err := command.Execute(); err != nil {
+		log.Fatal("failed to run command", err)
 	}
 }
