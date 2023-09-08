@@ -15,8 +15,6 @@ func errorHandler(c *gin.Context, err error) {
 	}
 	var statusCode int
 	switch fail.Type {
-	case exception.TypeInternal:
-		statusCode = http.StatusInternalServerError
 	case exception.TypeNotFound:
 		statusCode = http.StatusNotFound
 	case exception.TypeTokenExpired, exception.TypeTokenInvalid:
@@ -26,6 +24,8 @@ func errorHandler(c *gin.Context, err error) {
 			fail.AddError("exception", fail.Cause.Error())
 		}
 		statusCode = http.StatusUnprocessableEntity
+	default:
+		statusCode = http.StatusInternalServerError
 	}
 	c.JSON(statusCode, fail)
 }
