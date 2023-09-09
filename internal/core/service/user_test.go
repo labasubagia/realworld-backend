@@ -50,6 +50,99 @@ func TestCurrentUserOK(t *testing.T) {
 	require.Equal(t, token, result.Token)
 }
 
+func TestUpdateUserOK(t *testing.T) {
+	user, token, _ := createRandomUser(t)
+	payload, err := testService.TokenMaker().VerifyToken(token)
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+
+	newEmail := util.RandomEmail()
+	newUsername := util.RandomUsername()
+	newPassword := util.RandomString(8)
+	newImage := util.RandomURL()
+	newBio := util.RandomString(5)
+
+	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
+		AuthArg: port.AuthParams{
+			Token:   token,
+			Payload: payload,
+		},
+		User: domain.User{
+			ID:       user.ID,
+			Email:    newEmail,
+			Username: newUsername,
+			Password: newPassword,
+			Image:    newImage,
+			Bio:      newBio,
+		},
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, newEmail, result.User.Email)
+	require.Equal(t, newUsername, result.User.Username)
+	require.Equal(t, newImage, result.User.Image)
+	require.Equal(t, newBio, result.User.Bio)
+	require.Nil(t, util.CheckPassword(newPassword, result.User.Password))
+}
+
+func TestUpdateUserSameDataOK(t *testing.T) {
+	user, token, password := createRandomUser(t)
+	payload, err := testService.TokenMaker().VerifyToken(token)
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+
+	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
+		AuthArg: port.AuthParams{
+			Token:   token,
+			Payload: payload,
+		},
+		User: domain.User{
+			ID:       user.ID,
+			Email:    user.Email,
+			Username: user.Username,
+			Password: password,
+			Image:    user.Image,
+			Bio:      user.Bio,
+		},
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, user.Email, result.User.Email)
+	require.Equal(t, user.Username, result.User.Username)
+	require.Equal(t, user.Image, result.User.Image)
+	require.Equal(t, user.Bio, result.User.Bio)
+	require.Nil(t, util.CheckPassword(password, result.User.Password))
+}
+
+func TestUpdateUserEmptyOK(t *testing.T) {
+	user, token, password := createRandomUser(t)
+	payload, err := testService.TokenMaker().VerifyToken(token)
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+
+	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
+		AuthArg: port.AuthParams{
+			Token:   token,
+			Payload: payload,
+		},
+		User: domain.User{
+			ID:       user.ID,
+			Email:    "",
+			Username: "",
+			Password: "",
+			Image:    "",
+			Bio:      "",
+		},
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, user.Email, result.User.Email)
+	require.Equal(t, user.Username, result.User.Username)
+	require.Equal(t, user.Image, result.User.Image)
+	require.Equal(t, user.Bio, result.User.Bio)
+	require.Nil(t, util.CheckPassword(password, result.User.Password))
+}
+
 func createRandomLogin(t *testing.T) {
 	user, _, password := createRandomUser(t)
 	createLogin(t, port.LoginUserParams{User: domain.User{

@@ -131,3 +131,57 @@ func (server *Server) CurrentUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
+
+type UserUpdateParams struct {
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Bio      string `json:"bio,omitempty"`
+	Image    string `json:"image,omitempty"`
+}
+
+type UpdateUserRequest struct {
+	User UserUpdateParams `json:"user"`
+}
+
+type UpdateUserResult struct {
+	User UserResult `json:"user"`
+}
+
+func (server *Server) UpdateUser(c *gin.Context) {
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	req := UpdateUserRequest{}
+	if err := c.BindJSON(&req); err != nil {
+		errorHandler(c, err)
+		return
+	}
+	result, err := server.service.User().Update(context.Background(), port.UpdateUserParams{
+		AuthArg: authArg,
+		User: domain.User{
+			ID:       authArg.Payload.UserID,
+			Email:    req.User.Email,
+			Username: req.User.Username,
+			Password: req.User.Password,
+			Image:    req.User.Image,
+			Bio:      req.User.Bio,
+		},
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	res := CurrentUserResponse{
+		User: UserResult{
+			Email:    result.User.Email,
+			Username: result.User.Username,
+			Bio:      result.User.Bio,
+			Image:    result.User.Image,
+			Token:    result.Token,
+		},
+	}
+	c.JSON(http.StatusOK, res)
+}

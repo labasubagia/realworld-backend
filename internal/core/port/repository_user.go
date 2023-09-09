@@ -6,17 +6,22 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 )
 
-type CreateUserParams struct {
+type CreateUserPayload struct {
 	User domain.User
 }
 
-type FilterUserParams struct {
+type UpdateUserPayload struct {
+	User domain.User
+}
+
+type FilterUserPayload struct {
 	IDs       []int64
 	Usernames []string
 	Emails    []string
 }
 
 type UserRepository interface {
-	CreateUser(context.Context, CreateUserParams) (domain.User, error)
-	FilterUser(context.Context, FilterUserParams) ([]domain.User, error)
+	CreateUser(context.Context, CreateUserPayload) (domain.User, error)
+	UpdateUser(context.Context, UpdateUserPayload) (domain.User, error)
+	FilterUser(context.Context, FilterUserPayload) ([]domain.User, error)
 }

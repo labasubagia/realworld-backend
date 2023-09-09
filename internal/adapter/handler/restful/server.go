@@ -33,13 +33,14 @@ func (server *Server) setupRouter() {
 
 	router := gin.Default()
 	router.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"message": "Hello World!"})
+		ctx.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
 	})
 	router.POST("/users", server.Register)
 	router.POST("/users/login", server.Login)
 
-	authRouter := router.Use(server.AuthMiddleware)
+	authRouter := router.Use(server.AuthMiddleware())
 	authRouter.GET("/user", server.CurrentUser)
+	authRouter.PUT("/user", server.UpdateUser)
 
 	server.router = router
 }

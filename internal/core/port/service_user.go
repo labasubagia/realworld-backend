@@ -35,8 +35,19 @@ type AuthParams struct {
 	Payload *token.Payload
 }
 
+type UpdateUserParams struct {
+	AuthArg AuthParams
+	User    domain.User
+}
+
+type UpdateUserResult struct {
+	User  domain.User
+	Token string
+}
+
 type UserService interface {
 	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
 	Login(context.Context, LoginUserParams) (LoginUserResult, error)
+	Update(context.Context, UpdateUserParams) (UpdateUserResult, error)
 	Current(context.Context, AuthParams) (CurrentUserResult, error)
 }

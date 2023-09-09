@@ -25,7 +25,7 @@ func (s *userService) Register(ctx context.Context, req port.RegisterUserParams)
 	if err != nil {
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
-	result.User, err = s.property.repo.User().CreateUser(ctx, port.CreateUserParams{User: reqUser})
+	result.User, err = s.property.repo.User().CreateUser(ctx, port.CreateUserPayload{User: reqUser})
 	if err != nil {
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
@@ -39,7 +39,7 @@ func (s *userService) Register(ctx context.Context, req port.RegisterUserParams)
 }
 
 func (s *userService) Login(ctx context.Context, req port.LoginUserParams) (result port.LoginUserResult, err error) {
-	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{Emails: []string{req.User.Email}})
+	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{Emails: []string{req.User.Email}})
 	if err != nil {
 		return port.LoginUserResult{}, exception.Into(err)
 	}
@@ -65,7 +65,7 @@ func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result 
 		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
-	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{IDs: []int64{arg.Payload.UserID}})
+	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{IDs: []int64{arg.Payload.UserID}})
 	if err != nil {
 		return port.CurrentUserResult{}, exception.Into(err)
 	}
@@ -76,5 +76,36 @@ func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result 
 	result.User = existing[0]
 	result.Token = arg.Token
 
+	return result, nil
+}
+
+func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (result port.UpdateUserResult, err error) {
+	if arg.AuthArg.Payload == nil {
+		return port.UpdateUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+	}
+
+	payload := port.UpdateUserPayload{
+		User: domain.User{
+			ID:        arg.User.ID,
+			Username:  arg.User.Username,
+			Email:     arg.User.Email,
+			Password:  arg.User.Password,
+			Image:     arg.User.Image,
+			Bio:       arg.User.Bio,
+			UpdatedAt: time.Now(),
+		},
+	}
+	if arg.User.Password != "" {
+		if err := payload.User.SetPassword(arg.User.Password); err != nil {
+			return port.UpdateUserResult{}, exception.Into(err)
+		}
+	}
+
+	result.User, err = s.property.repo.User().UpdateUser(ctx, payload)
+	if err != nil {
+		return port.UpdateUserResult{}, exception.Into(err)
+	}
+
+	result.Token = arg.AuthArg.Token
 	return result, nil
 }
