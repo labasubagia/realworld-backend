@@ -36,3 +36,12 @@ CREATE TABLE "article_tags" (
     FOREIGN KEY ("article_id") REFERENCES "articles" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+--bun:split
+CREATE TABLE "article_favorites" (
+    "user_id" INTEGER NOT NULL,
+    "article_id" INTEGER NOT NULL,
+    PRIMARY KEY ("user_id", "article_id"),
+    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY ("article_id") REFERENCES "articles" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)

@@ -91,3 +91,20 @@ func (user *User) SetImageURL(url string) error {
 	user.Image = url
 	return nil
 }
+
+type UserFollow struct {
+	bun.BaseModel `bun:"table:user_follows,alias:uf"`
+	FollowerID    ID `bun:"follower_id"`
+	FolloweeID    ID `bun:"followee_id"`
+}
+
+func NewUserFollow(arg UserFollow) (UserFollow, error) {
+	if arg.FollowerID == arg.FolloweeID {
+		return UserFollow{}, exception.Validation().AddError("exception", "cannot follow yourself")
+	}
+	follow := UserFollow{
+		FollowerID: arg.FollowerID,
+		FolloweeID: arg.FolloweeID,
+	}
+	return follow, nil
+}

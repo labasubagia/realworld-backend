@@ -40,3 +40,20 @@ type ArticleTag struct {
 	ArticleID     ID `bun:"article_id,notnull"`
 	TagID         ID `bun:"tag_id,notnull"`
 }
+
+type Comment struct {
+	bun.BaseModel `bun:"table:comments,alias:c"`
+	ID            ID        `bun:"id,pk,autoincrement"`
+	ArticleID     ID        `bun:"article_id,notnull"`
+	AuthorID      ID        `bun:"author_id,notnull"`
+	Body          string    `bun:"body,notnull"`
+	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+}
+
+type ArticleFavorite struct {
+	bun.BaseModel `bun:"table:article_favorites,alias:af"`
+	ID            ID `bun:"id,pk,autoincrement"`
+	ArticleID     ID `bun:"article_id,notnull"`
+	UserID        ID `bun:"user_id,notnull"`
+}
