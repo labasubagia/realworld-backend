@@ -39,13 +39,13 @@ func (server *Server) setupRouter() {
 	router.POST("/users/login", server.Login)
 
 	userRouter := router.Group("/user")
-	userRouter.Use(server.AuthMiddleware())
+	userRouter.Use(server.AuthMiddleware(true))
 	userRouter.GET("/", server.CurrentUser)
 	userRouter.PUT("/", server.UpdateUser)
 
-	router.GET("/profiles/:username", server.Profile)
 	profileRouter := router.Group("/profiles/:username")
-	profileRouter.Use(server.AuthMiddleware())
+	profileRouter.Use(server.AuthMiddleware(false))
+	profileRouter.GET("/", server.Profile)
 	profileRouter.POST("/follow", server.FollowUser)
 	profileRouter.DELETE("/follow", server.UnFollowUser)
 
