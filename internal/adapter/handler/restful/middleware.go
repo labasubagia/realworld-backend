@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
-	"github.com/labasubagia/realworld-backend/internal/core/util/token"
 )
 
 const (
@@ -16,45 +15,44 @@ const (
 	authorizationArgKey    = "authorization_arg"
 )
 
-func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authorizationHeader := c.GetHeader(authorizationHeaderKey)
-		if len(authorizationHeader) == 0 {
-			msg := "authorization header not provided"
-			err := exception.New(exception.TypePermissionDenied, msg, nil)
-			errorHandler(c, err)
-			return
-		}
+func (s *Server) AuthMiddleware(c *gin.Context) {
 
-		fields := strings.Fields(authorizationHeader)
-		if len(fields) < 2 {
-			msg := "invalid authorization format"
-			err := exception.New(exception.TypePermissionDenied, msg, nil)
-			errorHandler(c, err)
-			return
-		}
-
-		authorizationType := strings.ToLower(fields[0])
-		if authorizationType != authorizationTypeToken {
-			msg := fmt.Sprintf("authorization type %s not supported", authorizationType)
-			err := exception.New(exception.TypePermissionDenied, msg, nil)
-			errorHandler(c, err)
-			return
-		}
-
-		token := fields[1]
-		payload, err := tokenMaker.VerifyToken(token)
-		if err != nil {
-			errorHandler(c, err)
-			return
-		}
-
-		c.Set(authorizationArgKey, port.AuthParams{
-			Token:   token,
-			Payload: payload,
-		})
-		c.Next()
+	authorizationHeader := c.GetHeader(authorizationHeaderKey)
+	if len(authorizationHeader) == 0 {
+		msg := "authorization header not provided"
+		err := exception.New(exception.TypePermissionDenied, msg, nil)
+		errorHandler(c, err)
+		return
 	}
+
+	fields := strings.Fields(authorizationHeader)
+	if len(fields) < 2 {
+		msg := "invalid authorization format"
+		err := exception.New(exception.TypePermissionDenied, msg, nil)
+		errorHandler(c, err)
+		return
+	}
+
+	authorizationType := strings.ToLower(fields[0])
+	if authorizationType != authorizationTypeToken {
+		msg := fmt.Sprintf("authorization type %s not supported", authorizationType)
+		err := exception.New(exception.TypePermissionDenied, msg, nil)
+		errorHandler(c, err)
+		return
+	}
+
+	token := fields[1]
+	payload, err := s.service.TokenMaker().VerifyToken(token)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	c.Set(authorizationArgKey, port.AuthParams{
+		Token:   token,
+		Payload: payload,
+	})
+	c.Next()
 }
 
 func getAuthArg(c *gin.Context) (port.AuthParams, error) {
