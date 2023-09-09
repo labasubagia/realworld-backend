@@ -11,6 +11,7 @@ type CreateUserParams struct {
 }
 
 type FilterUserParams struct {
+	IDs       []int64
 	Usernames []string
 	Emails    []string
 }

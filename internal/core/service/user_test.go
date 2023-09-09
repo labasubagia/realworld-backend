@@ -71,7 +71,7 @@ func createLogin(t *testing.T, arg port.LoginUserParams) (user domain.User, toke
 	payload, err := testService.TokenMaker().VerifyToken(result.Token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
-	require.Equal(t, result.User.Email, payload.Email)
+	require.Equal(t, result.User.ID, payload.UserID)
 
 	return user, result.Token, password
 }
@@ -101,7 +101,7 @@ func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, to
 	payload, err := testService.TokenMaker().VerifyToken(result.Token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
-	require.Equal(t, user.Email, payload.Email)
+	require.Equal(t, user.ID, payload.UserID)
 
 	return user, result.Token, arg.User.Password
 }

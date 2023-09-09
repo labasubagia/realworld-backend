@@ -30,7 +30,7 @@ func (s *userService) Register(ctx context.Context, req port.RegisterUserParams)
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Email, 2*time.Hour)
+	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.ID, 2*time.Hour)
 	if err != nil {
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
@@ -52,7 +52,7 @@ func (s *userService) Login(ctx context.Context, req port.LoginUserParams) (resu
 		return port.LoginUserResult{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Email, 2*time.Hour)
+	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.ID, 2*time.Hour)
 	if err != nil {
 		return port.LoginUserResult{}, exception.Into(err)
 	}
@@ -65,7 +65,7 @@ func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result 
 		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
-	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{Emails: []string{arg.Payload.Email}})
+	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{IDs: []int64{arg.Payload.UserID}})
 	if err != nil {
 		return port.CurrentUserResult{}, exception.Into(err)
 	}
