@@ -197,6 +197,10 @@ type ProfileUserResult struct {
 	Profile UserProfile `json:"profile"`
 }
 
+type FollowUserResult ProfileUserResult
+
+type UnFollowUserResult ProfileUserResult
+
 func (server *Server) Profile(c *gin.Context) {
 	username := c.Param("username")
 	authArg, _ := getAuthArg(c)
@@ -213,6 +217,50 @@ func (server *Server) Profile(c *gin.Context) {
 			Username:  result.User.Username,
 			Bio:       result.User.Bio,
 			Image:     result.User.Image,
+			Following: result.IsFollow,
+		},
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (server *Server) FollowUser(c *gin.Context) {
+	username := c.Param("username")
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	result, err := server.service.User().Follow(context.Background(), port.ProfileParams{
+		Username: username,
+		AuthArg:  authArg,
+	})
+	res := FollowUserResult{
+		Profile: UserProfile{
+			Username:  result.User.Username,
+			Image:     result.User.Image,
+			Bio:       result.User.Bio,
+			Following: result.IsFollow,
+		},
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (server *Server) UnFollowUser(c *gin.Context) {
+	username := c.Param("username")
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	result, err := server.service.User().UnFollow(context.Background(), port.ProfileParams{
+		Username: username,
+		AuthArg:  authArg,
+	})
+	res := UnFollowUserResult{
+		Profile: UserProfile{
+			Username:  result.User.Username,
+			Image:     result.User.Image,
+			Bio:       result.User.Bio,
 			Following: result.IsFollow,
 		},
 	}

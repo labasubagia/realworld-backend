@@ -44,6 +44,10 @@ func (server *Server) setupRouter() {
 	userRouter.PUT("/", server.UpdateUser)
 
 	router.GET("/profiles/:username", server.Profile)
+	profileRouter := router.Group("/profiles/:username")
+	profileRouter.Use(server.AuthMiddleware())
+	profileRouter.POST("/follow", server.FollowUser)
+	profileRouter.DELETE("/follow", server.UnFollowUser)
 
 	server.router = router
 }

@@ -133,3 +133,65 @@ func (s *userService) Profile(ctx context.Context, arg port.ProfileParams) (resu
 
 	return result, nil
 }
+
+func (s *userService) Follow(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
+	if arg.AuthArg.Payload == nil {
+		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+	}
+
+	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+
+	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+		FolloweeIDs: []domain.ID{result.User.ID},
+	})
+	if len(follows) > 0 {
+		result.IsFollow = true
+		return result, nil
+	}
+
+	_, err = s.property.repo.User().Follow(ctx, port.FollowPayload{Follow: domain.UserFollow{
+		FollowerID: arg.AuthArg.Payload.UserID,
+		FolloweeID: result.User.ID,
+	}})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+
+	result.IsFollow = true
+	return result, nil
+}
+
+func (s *userService) UnFollow(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
+	if arg.AuthArg.Payload == nil {
+		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+	}
+
+	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+
+	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+		FolloweeIDs: []domain.ID{result.User.ID},
+	})
+	if len(follows) < 1 {
+		result.IsFollow = false
+		return result, nil
+	}
+
+	_, err = s.property.repo.User().UnFollow(ctx, port.UnFollowPayload{Follow: domain.UserFollow{
+		FollowerID: arg.AuthArg.Payload.UserID,
+		FolloweeID: result.User.ID,
+	}})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+
+	result.IsFollow = false
+	return result, nil
+}

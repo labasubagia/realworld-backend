@@ -133,6 +133,25 @@ func TestProfile(t *testing.T) {
 	require.False(t, result.IsFollow)
 }
 
+func TestFollowUnFollow(t *testing.T) {
+	followee, _, _ := createRandomUser(t)
+	_, followerAuthArg, _ := createRandomUser(t)
+
+	followResult, err := testService.User().Follow(context.Background(), port.ProfileParams{
+		Username: followee.Username,
+		AuthArg:  followerAuthArg,
+	})
+	require.Nil(t, err)
+	require.True(t, followResult.IsFollow)
+
+	unFollowResult, err := testService.User().UnFollow(context.Background(), port.ProfileParams{
+		Username: followee.Username,
+		AuthArg:  followerAuthArg,
+	})
+	require.Nil(t, err)
+	require.False(t, unFollowResult.IsFollow)
+}
+
 func createRandomLogin(t *testing.T) {
 	user, _, password := createRandomUser(t)
 	createLogin(t, port.LoginUserParams{User: domain.User{

@@ -61,4 +61,6 @@ type UserService interface {
 	Update(context.Context, UpdateUserParams) (UpdateUserResult, error)
 	Current(context.Context, AuthParams) (CurrentUserResult, error)
 	Profile(context.Context, ProfileParams) (ProfileResult, error)
+	Follow(context.Context, ProfileParams) (ProfileResult, error)
+	UnFollow(context.Context, ProfileParams) (ProfileResult, error)
 }

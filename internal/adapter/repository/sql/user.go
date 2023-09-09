@@ -104,3 +104,23 @@ func (r *userRepo) FilterFollow(ctx context.Context, filter port.FilterUserFollo
 	}
 	return follows, nil
 }
+
+func (r *userRepo) Follow(ctx context.Context, arg port.FollowPayload) (domain.UserFollow, error) {
+	_, err := r.db.NewInsert().Model(&arg.Follow).Exec(ctx)
+	if err != nil {
+		return domain.UserFollow{}, exception.Into(err)
+	}
+	return arg.Follow, nil
+}
+
+func (r *userRepo) UnFollow(ctx context.Context, arg port.UnFollowPayload) (domain.UserFollow, error) {
+	_, err := r.db.
+		NewDelete().
+		Model(&arg.Follow).
+		Where("follower_id = ? AND followee_id = ?", arg.Follow.FollowerID, arg.Follow.FollowerID).
+		Exec(ctx)
+	if err != nil {
+		return domain.UserFollow{}, exception.Into(err)
+	}
+	return arg.Follow, nil
+}
