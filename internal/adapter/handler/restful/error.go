@@ -13,6 +13,9 @@ func errorHandler(c *gin.Context, err error) {
 		c.JSON(http.StatusInternalServerError, fail)
 		return
 	}
+	if !fail.HasError() {
+		fail.AddError("exception", fail.Message)
+	}
 	var statusCode int
 	switch fail.Type {
 	case exception.TypeNotFound:
@@ -20,9 +23,6 @@ func errorHandler(c *gin.Context, err error) {
 	case exception.TypeTokenExpired, exception.TypeTokenInvalid:
 		statusCode = http.StatusUnauthorized
 	case exception.TypeValidation:
-		if !fail.HasError() {
-			fail.AddError("exception", fail.Cause.Error())
-		}
 		statusCode = http.StatusUnprocessableEntity
 	default:
 		statusCode = http.StatusInternalServerError

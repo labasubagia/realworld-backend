@@ -30,12 +30,18 @@ func NewServer(config util.Config, service port.Service) port.Server {
 }
 
 func (server *Server) setupRouter() {
+	authMiddleware := authMiddleware(server.service.TokenMaker())
+
 	router := gin.Default()
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"message": "Hello World!"})
 	})
 	router.POST("/users", server.Register)
 	router.POST("/users/login", server.Login)
+
+	authRouter := router.Use(authMiddleware)
+	authRouter.GET("/user", server.CurrentUser)
+
 	server.router = router
 }
 

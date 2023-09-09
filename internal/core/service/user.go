@@ -30,7 +30,7 @@ func (s *userService) Register(ctx context.Context, req port.RegisterUserParams)
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Username, 2*time.Hour)
+	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Email, 2*time.Hour)
 	if err != nil {
 		return port.RegisterUserResult{}, exception.Into(err)
 	}
@@ -52,10 +52,29 @@ func (s *userService) Login(ctx context.Context, req port.LoginUserParams) (resu
 		return port.LoginUserResult{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Username, 2*time.Hour)
+	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.Email, 2*time.Hour)
 	if err != nil {
 		return port.LoginUserResult{}, exception.Into(err)
 	}
+
+	return result, nil
+}
+
+func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result port.CurrentUserResult, err error) {
+	if arg.Payload == nil {
+		exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+	}
+
+	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{Emails: []string{arg.Payload.Email}})
+	if err != nil {
+		return port.CurrentUserResult{}, exception.Into(err)
+	}
+	if len(existing) < 1 {
+		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "no user found", nil)
+	}
+
+	result.User = existing[0]
+	result.Token = arg.Token
 
 	return result, nil
 }

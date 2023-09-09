@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
+	"github.com/labasubagia/realworld-backend/internal/core/util/token"
 )
 
 type RegisterUserParams struct {
@@ -24,7 +25,18 @@ type LoginUserResult struct {
 	Token string
 }
 
+type CurrentUserResult struct {
+	User  domain.User
+	Token string
+}
+
+type AuthParams struct {
+	Token   string
+	Payload *token.Payload
+}
+
 type UserService interface {
 	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
 	Login(context.Context, LoginUserParams) (LoginUserResult, error)
+	Current(context.Context, AuthParams) (CurrentUserResult, error)
 }

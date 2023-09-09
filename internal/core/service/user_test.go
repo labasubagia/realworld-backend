@@ -10,22 +10,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRegister(t *testing.T) {
+func TestRegisterOK(t *testing.T) {
 	createRandomUser(t)
 }
 
-func TestRegisterWithImage(t *testing.T) {
+func TestRegisterWithImageOK(t *testing.T) {
 	arg := createUserArg()
 	arg.User.SetImageURL(util.RandomURL())
 	createUser(t, arg)
 }
 
-func TestLogin(t *testing.T) {
+func TestLoginOK(t *testing.T) {
 	createRandomLogin(t)
 }
 
-func createRandomUser(t *testing.T) (user domain.User, token, password string) {
-	return createUser(t, createUserArg())
+func TestLoginInvalid(t *testing.T) {
+	result, err := testService.User().Login(context.Background(), port.LoginUserParams{
+		User: domain.RandomUser(),
+	})
+	require.NotNil(t, err)
+	require.Empty(t, result)
+}
+
+func TestCurrentUserOK(t *testing.T) {
+	user, token, _ := createRandomUser(t)
+
+	payload, err := testService.TokenMaker().VerifyToken(token)
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+
+	result, err := testService.User().Current(context.Background(), port.AuthParams{
+		Token:   token,
+		Payload: payload,
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+
+	require.Equal(t, user, result.User)
+	require.Equal(t, token, result.Token)
 }
 
 func createRandomLogin(t *testing.T) {
@@ -49,9 +71,13 @@ func createLogin(t *testing.T, arg port.LoginUserParams) (user domain.User, toke
 	payload, err := testService.TokenMaker().VerifyToken(result.Token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
-	require.Equal(t, result.User.Username, payload.Username)
+	require.Equal(t, result.User.Email, payload.Email)
 
 	return user, result.Token, password
+}
+
+func createRandomUser(t *testing.T) (user domain.User, token, password string) {
+	return createUser(t, createUserArg())
 }
 
 func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, token, password string) {
@@ -75,7 +101,7 @@ func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, to
 	payload, err := testService.TokenMaker().VerifyToken(result.Token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
-	require.Equal(t, user.Username, payload.Username)
+	require.Equal(t, user.Email, payload.Email)
 
 	return user, result.Token, arg.User.Password
 }

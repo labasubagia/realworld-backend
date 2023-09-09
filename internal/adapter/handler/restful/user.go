@@ -1,6 +1,7 @@
 package restful
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -101,5 +102,32 @@ func (server *Server) Login(c *gin.Context) {
 			Token:    result.Token,
 		},
 	}
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
+}
+
+type CurrentUserResponse struct {
+	User UserResult `json:"user"`
+}
+
+func (server *Server) CurrentUser(c *gin.Context) {
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	result, err := server.service.User().Current(context.Background(), authArg)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	res := CurrentUserResponse{
+		User: UserResult{
+			Email:    result.User.Email,
+			Username: result.User.Username,
+			Bio:      result.User.Bio,
+			Image:    result.User.Image,
+			Token:    result.Token,
+		},
+	}
+	c.JSON(http.StatusOK, res)
 }
