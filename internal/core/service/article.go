@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
@@ -41,7 +42,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		}
 
 		// assign tags
-		tagIDs := []int64{}
+		tagIDs := []domain.ID{}
 		for _, tag := range result.Tags {
 			tagIDs = append(tagIDs, tag.ID)
 		}

@@ -11,8 +11,8 @@ import (
 const UserDefaultImage string = "https://api.realworld.io/images/demo-avatar.png"
 
 type User struct {
-	bun.BaseModel `bu:"table:users,alias:u"`
-	ID            int64     `bun:"id,pk,autoincrement"`
+	bun.BaseModel `bun:"table:users,alias:u"`
+	ID            ID        `bun:"id,pk,autoincrement"`
 	Email         string    `bun:"email,notnull"`
 	Username      string    `bun:"username,notnull"`
 	Password      string    `bun:"password,notnull"`

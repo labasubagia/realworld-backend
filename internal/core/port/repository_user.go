@@ -15,7 +15,7 @@ type UpdateUserPayload struct {
 }
 
 type FilterUserPayload struct {
-	IDs       []int64
+	IDs       []domain.ID
 	Usernames []string
 	Emails    []string
 }

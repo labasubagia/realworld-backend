@@ -9,8 +9,8 @@ import (
 
 type Article struct {
 	bun.BaseModel `bun:"table:articles,alias:a"`
-	ID            int64     `bun:"id,pk,autoincrement"`
-	AuthorID      int64     `bun:"author_id,notnull"`
+	ID            ID        `bun:"id,pk,autoincrement"`
+	AuthorID      ID        `bun:"author_id,notnull"`
 	Title         string    `bun:"title,notnull"`
 	Slug          string    `bun:"slug,notnull"`
 	Description   string    `bun:"description,notnull"`
@@ -31,12 +31,12 @@ func RandomArticle(author User) Article {
 
 type Tag struct {
 	bun.BaseModel `bun:"table:tags,alias:t"`
-	ID            int64  `bun:"id,pk,autoincrement"`
+	ID            ID     `bun:"id,pk,autoincrement"`
 	Name          string `bun:"name,notnull"`
 }
 
 type ArticleTag struct {
 	bun.BaseModel `bun:"table:article_tags,alias:at"`
-	ArticleID     int64 `bun:"article_id,notnull"`
-	TagID         int64 `bun:"tag_id,notnull"`
+	ArticleID     ID `bun:"article_id,notnull"`
+	TagID         ID `bun:"tag_id,notnull"`
 }

@@ -15,8 +15,8 @@ type AddTagsParams struct {
 }
 
 type AssignTags struct {
-	ArticleID int64
-	TagIDs    []int64
+	ArticleID domain.ID
+	TagIDs    []domain.ID
 }
 
 type FilterTagParams struct {

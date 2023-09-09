@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
@@ -21,7 +22,7 @@ func NewJWTMaker(secretKey string) (Maker, error) {
 	return &JWTMaker{secretKey}, nil
 }
 
-func (maker JWTMaker) CreateToken(userID int64, duration time.Duration) (string, *Payload, error) {
+func (maker JWTMaker) CreateToken(userID domain.ID, duration time.Duration) (string, *Payload, error) {
 	payload, err := NewPayload(userID, duration)
 	if err != nil {
 		return "", payload, err

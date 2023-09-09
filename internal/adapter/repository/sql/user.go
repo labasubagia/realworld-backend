@@ -31,7 +31,7 @@ func (r *userRepo) CreateUser(ctx context.Context, req port.CreateUserPayload) (
 func (r *userRepo) UpdateUser(ctx context.Context, req port.UpdateUserPayload) (domain.User, error) {
 
 	// find current
-	current, err := r.FindOne(ctx, port.FilterUserPayload{IDs: []int64{req.User.ID}})
+	current, err := r.FindOne(ctx, port.FilterUserPayload{IDs: []domain.ID{req.User.ID}})
 	if err != nil {
 		return domain.User{}, intoException(err)
 	}
@@ -51,7 +51,7 @@ func (r *userRepo) UpdateUser(ctx context.Context, req port.UpdateUserPayload) (
 	}
 
 	// find updated
-	updated, err := r.FindOne(ctx, port.FilterUserPayload{IDs: []int64{req.User.ID}})
+	updated, err := r.FindOne(ctx, port.FilterUserPayload{IDs: []domain.ID{req.User.ID}})
 	if err != nil {
 		return domain.User{}, intoException(err)
 	}
