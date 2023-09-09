@@ -117,7 +117,8 @@ func (r *userRepo) UnFollow(ctx context.Context, arg port.UnFollowPayload) (doma
 	_, err := r.db.
 		NewDelete().
 		Model(&arg.Follow).
-		Where("follower_id = ? AND followee_id = ?", arg.Follow.FollowerID, arg.Follow.FollowerID).
+		Where("follower_id = ?", arg.Follow.FollowerID).
+		Where("followee_id = ?", arg.Follow.FolloweeID).
 		Exec(ctx)
 	if err != nil {
 		return domain.UserFollow{}, exception.Into(err)
