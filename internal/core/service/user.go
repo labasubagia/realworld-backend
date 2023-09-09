@@ -153,10 +153,14 @@ func (s *userService) Follow(ctx context.Context, arg port.ProfileParams) (resul
 		return result, nil
 	}
 
-	_, err = s.property.repo.User().Follow(ctx, port.FollowPayload{Follow: domain.UserFollow{
+	newFollow, err := domain.NewUserFollow(domain.UserFollow{
 		FollowerID: arg.AuthArg.Payload.UserID,
 		FolloweeID: result.User.ID,
-	}})
+	})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+	_, err = s.property.repo.User().Follow(ctx, port.FollowPayload{Follow: newFollow})
 	if err != nil {
 		return port.ProfileResult{}, exception.Into(err)
 	}

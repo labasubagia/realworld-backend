@@ -7,6 +7,7 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 	"github.com/stretchr/testify/require"
 )
 
@@ -160,6 +161,21 @@ func TestFollowUnFollow(t *testing.T) {
 	require.Nil(t, err)
 	require.False(t, profileResult.IsFollow)
 
+}
+
+func TestSelfFollowFail(t *testing.T) {
+	user, authArg, _ := createRandomUser(t)
+	arg := port.ProfileParams{
+		Username: user.Username,
+		AuthArg:  authArg,
+	}
+	followResult, err := testService.User().Follow(context.Background(), arg)
+	require.NotNil(t, err)
+	require.Empty(t, followResult)
+	fail, ok := err.(*exception.Exception)
+	require.True(t, ok)
+	require.NotNil(t, fail)
+	require.Equal(t, exception.TypeValidation, fail.Type)
 }
 
 func createRandomLogin(t *testing.T) {
