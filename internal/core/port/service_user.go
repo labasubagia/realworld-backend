@@ -45,9 +45,20 @@ type UpdateUserResult struct {
 	Token string
 }
 
+type ProfileParams struct {
+	Username string
+	AuthArg  AuthParams
+}
+
+type ProfileResult struct {
+	User     domain.User
+	IsFollow bool
+}
+
 type UserService interface {
 	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
 	Login(context.Context, LoginUserParams) (LoginUserResult, error)
 	Update(context.Context, UpdateUserParams) (UpdateUserResult, error)
 	Current(context.Context, AuthParams) (CurrentUserResult, error)
+	Profile(context.Context, ProfileParams) (ProfileResult, error)
 }

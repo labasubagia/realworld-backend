@@ -109,3 +109,27 @@ func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (re
 	result.Token = arg.AuthArg.Token
 	return result, nil
 }
+
+func (s *userService) Profile(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
+	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+
+	if arg.AuthArg.Payload == nil {
+		return result, nil
+	}
+
+	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+		FolloweeIDs: []domain.ID{result.User.ID},
+	})
+	if err != nil {
+		return port.ProfileResult{}, exception.Into(err)
+	}
+	if len(follows) > 0 {
+		result.IsFollow = true
+	}
+
+	return result, nil
+}

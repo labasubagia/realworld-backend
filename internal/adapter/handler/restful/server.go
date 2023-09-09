@@ -38,9 +38,12 @@ func (server *Server) setupRouter() {
 	router.POST("/users", server.Register)
 	router.POST("/users/login", server.Login)
 
-	authRouter := router.Use(server.AuthMiddleware())
-	authRouter.GET("/user", server.CurrentUser)
-	authRouter.PUT("/user", server.UpdateUser)
+	userRouter := router.Group("/user")
+	userRouter.Use(server.AuthMiddleware())
+	userRouter.GET("/", server.CurrentUser)
+	userRouter.PUT("/", server.UpdateUser)
+
+	router.GET("/profiles/:username", server.Profile)
 
 	server.router = router
 }

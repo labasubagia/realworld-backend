@@ -33,28 +33,18 @@ func TestLoginInvalid(t *testing.T) {
 }
 
 func TestCurrentUserOK(t *testing.T) {
-	user, token, _ := createRandomUser(t)
+	user, authArg, _ := createRandomUser(t)
 
-	payload, err := testService.TokenMaker().VerifyToken(token)
-	require.NoError(t, err)
-	require.NotNil(t, payload)
-
-	result, err := testService.User().Current(context.Background(), port.AuthParams{
-		Token:   token,
-		Payload: payload,
-	})
+	result, err := testService.User().Current(context.Background(), authArg)
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
 
 	require.Equal(t, user, result.User)
-	require.Equal(t, token, result.Token)
+	require.Equal(t, authArg.Token, result.Token)
 }
 
 func TestUpdateUserOK(t *testing.T) {
-	user, token, _ := createRandomUser(t)
-	payload, err := testService.TokenMaker().VerifyToken(token)
-	require.NoError(t, err)
-	require.NotNil(t, payload)
+	user, authArg, _ := createRandomUser(t)
 
 	newEmail := util.RandomEmail()
 	newUsername := util.RandomUsername()
@@ -63,10 +53,7 @@ func TestUpdateUserOK(t *testing.T) {
 	newBio := util.RandomString(5)
 
 	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
-		AuthArg: port.AuthParams{
-			Token:   token,
-			Payload: payload,
-		},
+		AuthArg: authArg,
 		User: domain.User{
 			ID:       user.ID,
 			Email:    newEmail,
@@ -86,16 +73,10 @@ func TestUpdateUserOK(t *testing.T) {
 }
 
 func TestUpdateUserSameDataOK(t *testing.T) {
-	user, token, password := createRandomUser(t)
-	payload, err := testService.TokenMaker().VerifyToken(token)
-	require.NoError(t, err)
-	require.NotNil(t, payload)
+	user, authArg, password := createRandomUser(t)
 
 	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
-		AuthArg: port.AuthParams{
-			Token:   token,
-			Payload: payload,
-		},
+		AuthArg: authArg,
 		User: domain.User{
 			ID:       user.ID,
 			Email:    user.Email,
@@ -115,16 +96,10 @@ func TestUpdateUserSameDataOK(t *testing.T) {
 }
 
 func TestUpdateUserEmptyOK(t *testing.T) {
-	user, token, password := createRandomUser(t)
-	payload, err := testService.TokenMaker().VerifyToken(token)
-	require.NoError(t, err)
-	require.NotNil(t, payload)
+	user, authArg, password := createRandomUser(t)
 
 	result, err := testService.User().Update(context.Background(), port.UpdateUserParams{
-		AuthArg: port.AuthParams{
-			Token:   token,
-			Payload: payload,
-		},
+		AuthArg: authArg,
 		User: domain.User{
 			ID:       user.ID,
 			Email:    "",
@@ -141,6 +116,21 @@ func TestUpdateUserEmptyOK(t *testing.T) {
 	require.Equal(t, user.Image, result.User.Image)
 	require.Equal(t, user.Bio, result.User.Bio)
 	require.Nil(t, util.CheckPassword(password, result.User.Password))
+}
+
+func TestProfile(t *testing.T) {
+	user, authArg, _ := createRandomUser(t)
+	result, err := testService.User().Profile(context.Background(), port.ProfileParams{
+		Username: user.Username,
+		AuthArg:  authArg,
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, user.Email, result.User.Email)
+	require.Equal(t, user.Username, result.User.Username)
+	require.Equal(t, user.Image, result.User.Image)
+	require.Equal(t, user.Bio, result.User.Bio)
+	require.False(t, result.IsFollow)
 }
 
 func createRandomLogin(t *testing.T) {
@@ -169,11 +159,11 @@ func createLogin(t *testing.T, arg port.LoginUserParams) (user domain.User, toke
 	return user, result.Token, password
 }
 
-func createRandomUser(t *testing.T) (user domain.User, token, password string) {
+func createRandomUser(t *testing.T) (user domain.User, authArg port.AuthParams, password string) {
 	return createUser(t, createUserArg())
 }
 
-func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, token, password string) {
+func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, authArg port.AuthParams, password string) {
 	image := arg.User.Image
 	if image == "" {
 		image = domain.UserDefaultImage
@@ -196,7 +186,11 @@ func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, to
 	require.NotNil(t, payload)
 	require.Equal(t, user.ID, payload.UserID)
 
-	return user, result.Token, arg.User.Password
+	authArg = port.AuthParams{
+		Token:   result.Token,
+		Payload: payload,
+	}
+	return user, authArg, arg.User.Password
 }
 
 func createUserArg() port.RegisterUserParams {

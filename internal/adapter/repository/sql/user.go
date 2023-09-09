@@ -88,3 +88,19 @@ func (r *userRepo) FindOne(ctx context.Context, filter port.FilterUserPayload) (
 	}
 	return users[0], nil
 }
+
+func (r *userRepo) FilterFollow(ctx context.Context, filter port.FilterUserFollowPayload) ([]domain.UserFollow, error) {
+	follows := []domain.UserFollow{}
+	query := r.db.NewSelect().Model(&follows)
+	if len(filter.FollowerIDs) > 0 {
+		query = query.Where("follower_id IN (?)", bun.In(filter.FollowerIDs))
+	}
+	if len(filter.FolloweeIDs) > 0 {
+		query = query.Where("followee_id IN (?)", bun.In(filter.FolloweeIDs))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.UserFollow{}, intoException(err)
+	}
+	return follows, nil
+}

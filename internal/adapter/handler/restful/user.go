@@ -174,13 +174,46 @@ func (server *Server) UpdateUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	res := CurrentUserResponse{
+	res := UpdateUserResult{
 		User: UserResult{
 			Email:    result.User.Email,
 			Username: result.User.Username,
 			Bio:      result.User.Bio,
 			Image:    result.User.Image,
 			Token:    result.Token,
+		},
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+type UserProfile struct {
+	Username  string `json:"username"`
+	Bio       string `json:"bio"`
+	Image     string `json:"image"`
+	Following bool   `json:"following"`
+}
+
+type ProfileUserResult struct {
+	Profile UserProfile `json:"profile"`
+}
+
+func (server *Server) Profile(c *gin.Context) {
+	username := c.Param("username")
+	authArg, _ := getAuthArg(c)
+	result, err := server.service.User().Profile(context.Background(), port.ProfileParams{
+		Username: username,
+		AuthArg:  authArg,
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	res := ProfileUserResult{
+		Profile: UserProfile{
+			Username:  result.User.Username,
+			Bio:       result.User.Bio,
+			Image:     result.User.Image,
+			Following: result.IsFollow,
 		},
 	}
 	c.JSON(http.StatusOK, res)
