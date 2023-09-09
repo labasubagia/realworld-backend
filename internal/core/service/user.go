@@ -62,7 +62,7 @@ func (s *userService) Login(ctx context.Context, req port.LoginUserParams) (resu
 
 func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result port.CurrentUserResult, err error) {
 	if arg.Payload == nil {
-		exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
 	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserParams{Emails: []string{arg.Payload.Email}})
