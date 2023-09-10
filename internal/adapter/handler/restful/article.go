@@ -63,14 +63,18 @@ func (server *Server) ListArticle(c *gin.Context) {
 		Count:    result.Count,
 	}
 	for _, article := range result.Articles {
+		tags := []string{}
+		if len(article.TagNames) > 0 {
+			tags = article.TagNames
+		}
 		res.Articles = append(res.Articles, Article{
 			Slug:           article.Slug,
 			Title:          article.Title,
 			Description:    article.Description,
 			Body:           article.Body,
-			TagList:        article.TagNames,
-			CreatedAt:      article.CreatedAt.Format(formatTime),
-			UpdatedAt:      article.UpdatedAt.Format(formatTime),
+			TagList:        tags,
+			CreatedAt:      article.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt:      article.UpdatedAt.UTC().Format(formatTime),
 			Favorited:      article.IsFavorite,
 			FavoritesCount: article.FavoriteCount,
 			Author: Profile{
