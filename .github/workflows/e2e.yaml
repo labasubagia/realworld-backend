@@ -1,4 +1,4 @@
-name: test
+name: e2e
 on:
   workflow_dispatch:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: E2E Test
     runs-on: ubuntu-latest
 
     services:
@@ -32,8 +32,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Build
+        run: go build -o app
+
       - name: Run
-        run: nohup go run main.go start &
+        run: nohup ./app start &
 
       - name: E2E
         run: |
