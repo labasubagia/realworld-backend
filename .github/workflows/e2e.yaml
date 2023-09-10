@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  test:
+  e2e:
     name: E2E Test
     runs-on: ubuntu-latest
 
