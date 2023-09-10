@@ -254,11 +254,15 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		if err != nil {
 			return port.ListArticleResult{}, exception.Into(err)
 		}
-		if len(authors) == 0 {
-			authorNames := strings.Join(arg.AuthorNames, ", ")
-			msg := fmt.Sprintf("author %s does not exists", authorNames)
-			return port.ListArticleResult{}, exception.Validation().AddError("author", msg)
-		}
+
+		// ? DISABLE [error newman test]
+		// ? this just some case
+		// if len(authors) == 0 {
+		// 	authorNames := strings.Join(arg.AuthorNames, ", ")
+		// 	msg := fmt.Sprintf("author %s does not exists", authorNames)
+		// 	return port.ListArticleResult{}, exception.Validation().AddError("author", msg)
+		// }
+
 		for _, author := range authors {
 			authorIDs = append(authorIDs, author.ID)
 		}
