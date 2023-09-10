@@ -146,6 +146,17 @@ func TestListArticleOK(t *testing.T) {
 		require.Equal(t, expectedArticleIDs, articleIDs)
 	})
 
+	t.Run("Filter by nonexistent author", func(t *testing.T) {
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			AuthorNames: []string{"nonexistent_author"},
+		})
+		require.NotNil(t, err)
+		require.Empty(t, result)
+		fail, ok := err.(*exception.Exception)
+		require.True(t, ok)
+		require.Equal(t, exception.TypeValidation, fail.Type)
+	})
+
 	t.Run("Filter by author", func(t *testing.T) {
 		result, err := testService.Article().List(ctx, port.ListArticleParams{
 			AuthorNames: []string{author.Username},
@@ -159,6 +170,17 @@ func TestListArticleOK(t *testing.T) {
 		}
 	})
 
+	t.Run("Filter by nonexistent tag", func(t *testing.T) {
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			Tags: []string{"nonexistent_tag"},
+		})
+		require.NotNil(t, err)
+		require.Empty(t, result)
+		fail, ok := err.(*exception.Exception)
+		require.True(t, ok)
+		require.Equal(t, exception.TypeValidation, fail.Type)
+	})
+
 	t.Run("Filter by tags", func(t *testing.T) {
 		result, err := testService.Article().List(ctx, port.ListArticleParams{Tags: tags})
 		require.Nil(t, err)
@@ -168,6 +190,17 @@ func TestListArticleOK(t *testing.T) {
 			sort.Strings(article.TagNames)
 			require.Equal(t, tags, article.TagNames)
 		}
+	})
+
+	t.Run("Filter by nonexistent favorites", func(t *testing.T) {
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			FavoritedNames: []string{"nonexistent_fav_name"},
+		})
+		require.NotNil(t, err)
+		require.Empty(t, result)
+		fail, ok := err.(*exception.Exception)
+		require.True(t, ok)
+		require.Equal(t, exception.TypeValidation, fail.Type)
 	})
 
 	t.Run("Filter by favorites", func(t *testing.T) {

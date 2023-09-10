@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
@@ -100,6 +101,11 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		if err != nil {
 			return port.ListArticleResult{}, exception.Into(err)
 		}
+		if len(authors) == 0 {
+			authorNames := strings.Join(arg.AuthorNames, ", ")
+			msg := fmt.Sprintf("author %s does not exists", authorNames)
+			return port.ListArticleResult{}, exception.Validation().AddError("author", msg)
+		}
 		for _, author := range authors {
 			authorIDs = append(authorIDs, author.ID)
 		}
@@ -113,6 +119,11 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		tags, err := s.property.repo.Article().FilterTags(ctx, port.FilterTagPayload{Names: arg.Tags})
 		if err != nil {
 			return port.ListArticleResult{}, exception.Into(err)
+		}
+		if len(tags) == 0 {
+			tagNames := strings.Join(arg.Tags, ", ")
+			msg := fmt.Sprintf("tag %s does not exists", tagNames)
+			return port.ListArticleResult{}, exception.Validation().AddError("tag", msg)
 		}
 		tagIDs := []domain.ID{}
 		for _, tag := range tags {
@@ -140,6 +151,11 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		})
 		if err != nil {
 			return port.ListArticleResult{}, exception.Into(err)
+		}
+		if len(users) == 0 {
+			userNames := strings.Join(arg.FavoritedNames, ", ")
+			msg := fmt.Sprintf("user for favorite filter %s does not exists", userNames)
+			return port.ListArticleResult{}, exception.Validation().AddError("favorited", msg)
 		}
 		userIDs := []domain.ID{}
 		for _, user := range users {
