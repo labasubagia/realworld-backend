@@ -435,6 +435,48 @@ func TestCreateComment(t *testing.T) {
 	require.Len(t, getResult.Comments, 2)
 }
 
+func TestDeleteComment(t *testing.T) {
+	author, authorAuth, _ := createRandomUser(t)
+	_, userAuth, _ := createRandomUser(t)
+
+	article := createRandomArticle(t, author, authorAuth)
+	ctx := context.Background()
+
+	// user create comment
+	arg := port.AddCommentParams{
+		AuthArg: userAuth,
+		Slug:    article.Article.Slug,
+		Comment: domain.Comment{Body: util.RandomString(10)},
+	}
+	result, err := testService.Article().AddComment(ctx, arg)
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+
+	// author can see comment found
+	getResult, err := testService.Article().ListComments(ctx, port.ListCommentParams{
+		AuthArg: authorAuth,
+		Slug:    arg.Slug,
+	})
+	require.Nil(t, err)
+	require.Len(t, getResult.Comments, 1)
+
+	// user delete his comment
+	err = testService.Article().DeleteComment(ctx, port.DeleteCommentParams{
+		AuthArg:   userAuth,
+		Slug:      arg.Slug,
+		CommentID: result.Comment.ID,
+	})
+	require.Nil(t, err)
+
+	// author cannot see comment (gone)
+	getResult, err = testService.Article().ListComments(ctx, port.ListCommentParams{
+		AuthArg: authorAuth,
+		Slug:    arg.Slug,
+	})
+	require.Nil(t, err)
+	require.Len(t, getResult.Comments, 0)
+}
+
 func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) port.CreateArticleTxResult {
 	return createArticle(t, createArticleArg(author, authArg))
 }

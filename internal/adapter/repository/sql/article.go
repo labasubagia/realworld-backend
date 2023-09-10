@@ -243,3 +243,16 @@ func (r *articleRepo) FilterComment(ctx context.Context, arg port.FilterCommentP
 	}
 	return comments, nil
 }
+
+func (r *articleRepo) DeleteComment(ctx context.Context, arg port.DeleteCommentPayload) error {
+	_, err := r.db.NewDelete().
+		Model(&arg.Comment).
+		Where("id = ?", arg.Comment.ID).
+		Where("author_id = ?", arg.Comment.AuthorID).
+		Where("article_id = ?", arg.Comment.ArticleID).
+		Exec(ctx)
+	if err != nil {
+		return intoException(err)
+	}
+	return nil
+}

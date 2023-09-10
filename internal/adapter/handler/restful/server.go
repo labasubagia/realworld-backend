@@ -63,6 +63,7 @@ func (server *Server) setupRouter() {
 	commentRouter := articleRouter.Group("/:slug")
 	commentRouter.POST("/comments", server.AddComment)
 	commentRouter.GET("/comments", server.ListComments)
+	commentRouter.DELETE("/comments/:comment_id", server.DeleteComment)
 
 	server.router = router
 }

@@ -85,6 +85,12 @@ type ListCommentResult struct {
 	Comments []domain.Comment
 }
 
+type DeleteCommentParams struct {
+	AuthArg   AuthParams
+	Slug      string
+	CommentID domain.ID
+}
+
 type ArticleService interface {
 	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
 	Update(context.Context, UpdateArticleParams) (UpdateArticleResult, error)
@@ -95,6 +101,7 @@ type ArticleService interface {
 
 	AddComment(context.Context, AddCommentParams) (AddCommentResult, error)
 	ListComments(context.Context, ListCommentParams) (ListCommentResult, error)
+	DeleteComment(context.Context, DeleteCommentParams) error
 
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
 }

@@ -55,6 +55,10 @@ type FilterCommentPayload struct {
 	AuthorIDs  []domain.ID
 }
 
+type DeleteCommentPayload struct {
+	Comment domain.Comment
+}
+
 type ArticleRepository interface {
 	CreateArticle(context.Context, CreateArticlePayload) (domain.Article, error)
 	UpdateArticle(context.Context, UpdateArticlePayload) (domain.Article, error)
@@ -74,4 +78,5 @@ type ArticleRepository interface {
 
 	AddComment(context.Context, domain.Comment) (domain.Comment, error)
 	FilterComment(context.Context, FilterCommentPayload) ([]domain.Comment, error)
+	DeleteComment(context.Context, DeleteCommentPayload) error
 }

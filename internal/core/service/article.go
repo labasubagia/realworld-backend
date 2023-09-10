@@ -528,6 +528,32 @@ func (s *articleService) ListComments(ctx context.Context, arg port.ListCommentP
 	return result, nil
 }
 
+func (s *articleService) DeleteComment(ctx context.Context, arg port.DeleteCommentParams) error {
+	if arg.AuthArg.Payload == nil {
+		return exception.New(exception.TypePermissionDenied, "authentication required", nil)
+	}
+
+	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
+		Slugs: []string{arg.Slug},
+	})
+	if err != nil {
+		return exception.Into(err)
+	}
+
+	err = s.property.repo.Article().DeleteComment(ctx, port.DeleteCommentPayload{
+		Comment: domain.Comment{
+			ArticleID: article.ID,
+			AuthorID:  arg.AuthArg.Payload.UserID,
+			ID:        arg.CommentID,
+		},
+	})
+	if err != nil {
+		return exception.Into(err)
+	}
+
+	return nil
+}
+
 type GetCommentInfo struct {
 	authArg  port.AuthParams
 	comments []domain.Comment

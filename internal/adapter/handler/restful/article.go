@@ -3,10 +3,12 @@ package restful
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
+	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
 type Article struct {
@@ -436,4 +438,32 @@ func (server *Server) ListComments(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (server *Server) DeleteComment(c *gin.Context) {
+	slug := c.Param("slug")
+	commentID, err := strconv.Atoi(c.Param("comment_id"))
+	if err != nil {
+		err = exception.Validation().AddError("comment_id", "should valid id")
+		errorHandler(c, err)
+		return
+	}
+
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	err = server.service.Article().DeleteComment(context.Background(), port.DeleteCommentParams{
+		AuthArg:   authArg,
+		Slug:      slug,
+		CommentID: domain.ID(commentID),
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
