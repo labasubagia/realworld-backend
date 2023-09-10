@@ -99,6 +99,42 @@ func TestAddFavoriteArticleOK(t *testing.T) {
 	require.Equal(t, resultCreateArticle.Article.Title, result.Article.Title)
 }
 
+func TestFeedArticle(t *testing.T) {
+	author, _, _ := createRandomUser(t)
+	_, reader1Auth, _ := createRandomUser(t)
+	_, reader2Auth, _ := createRandomUser(t)
+	ctx := context.Background()
+
+	N := 5
+	for i := 0; i < N; i++ {
+		arg := createArticleArg(author)
+		createArticle(t, arg)
+	}
+
+	// follow author
+	followResult, err := testService.User().Follow(ctx, port.ProfileParams{
+		AuthArg:  reader1Auth,
+		Username: author.Username,
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, followResult)
+
+	t.Run("Feed", func(t *testing.T) {
+		result, err := testService.Article().Feed(ctx, port.ListArticleParams{AuthArg: reader1Auth})
+		require.Nil(t, err)
+		require.NotEmpty(t, result)
+		require.Len(t, result.Articles, N)
+		require.Equal(t, N, result.Count)
+	})
+
+	t.Run("Feed empty", func(t *testing.T) {
+		result, err := testService.Article().Feed(ctx, port.ListArticleParams{AuthArg: reader2Auth})
+		require.Nil(t, err)
+		require.Len(t, result.Articles, 0)
+		require.Equal(t, 0, result.Count)
+	})
+}
+
 func TestListArticleOK(t *testing.T) {
 	author, _, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)

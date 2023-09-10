@@ -88,3 +88,53 @@ func (server *Server) ListArticle(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (server *Server) Feed(c *gin.Context) {
+	offset, limit := getPagination(c)
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	arg := port.ListArticleParams{
+		AuthArg: authArg,
+		Offset:  offset,
+		Limit:   limit,
+	}
+	result, err := server.service.Article().Feed(context.Background(), arg)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	res := LisArticleResult{
+		Articles: []Article{},
+		Count:    result.Count,
+	}
+	for _, article := range result.Articles {
+		tags := []string{}
+		if len(article.TagNames) > 0 {
+			tags = article.TagNames
+		}
+		res.Articles = append(res.Articles, Article{
+			Slug:           article.Slug,
+			Title:          article.Title,
+			Description:    article.Description,
+			Body:           article.Body,
+			TagList:        tags,
+			CreatedAt:      article.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt:      article.UpdatedAt.UTC().Format(formatTime),
+			Favorited:      article.IsFavorite,
+			FavoritesCount: article.FavoriteCount,
+			Author: Profile{
+				Username:  article.Author.Username,
+				Bio:       article.Author.Bio,
+				Image:     article.Author.Image,
+				Following: article.Author.IsFollowed,
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, res)
+}

@@ -44,5 +44,6 @@ type AddFavoriteResult struct {
 type ArticleService interface {
 	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
 	List(context.Context, ListArticleParams) (ListArticleResult, error)
+	Feed(context.Context, ListArticleParams) (ListArticleResult, error)
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
 }

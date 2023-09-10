@@ -175,7 +175,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 	}
 
 	// Get articles
-	result.Articles, err = s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
+	articles, err := s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
 		IDs:       append(arg.IDs, append(taggedArticleIDs, favoritedArticleIDs...)...),
 		AuthorIDs: authorIDs,
 		Limit:     arg.Limit,
@@ -184,12 +184,75 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 	if err != nil {
 		return port.ListArticleResult{}, exception.Into(err)
 	}
-	result.Count = len(result.Articles)
 
-	// get article id and author id
-	authorIDs = []domain.ID{}
+	result, err = s.infoArticles(ctx, GetListArticleInfoParams{
+		authArg:  arg.AuthArg,
+		articles: articles,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+
+	return result, nil
+}
+
+func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (result port.ListArticleResult, err error) {
+
+	if arg.AuthArg.Payload == nil {
+		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+	}
+
+	followingAuthors, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+	if len(followingAuthors) == 0 {
+		res := port.ListArticleResult{
+			Articles: []domain.Article{},
+			Count:    0,
+		}
+		return res, nil
+	}
+
+	authorIDs := []domain.ID{}
+	for _, author := range followingAuthors {
+		authorIDs = append(authorIDs, author.FolloweeID)
+	}
+
+	articles, err := s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
+		AuthorIDs: authorIDs,
+		Limit:     arg.Limit,
+		Offset:    arg.Offset,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+
+	result, err = s.infoArticles(ctx, GetListArticleInfoParams{
+		authArg:  arg.AuthArg,
+		articles: articles,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+
+	return result, nil
+}
+
+type GetListArticleInfoParams struct {
+	authArg  port.AuthParams
+	articles []domain.Article
+}
+
+// infoArticles add decorator to articles
+func (s *articleService) infoArticles(ctx context.Context, arg GetListArticleInfoParams) (port.ListArticleResult, error) {
+
+	// Get article id and author id
+	authorIDs := []domain.ID{}
 	articleIDs := []domain.ID{}
-	for _, article := range result.Articles {
+	for _, article := range arg.articles {
 		authorIDs = append(authorIDs, article.AuthorID)
 		articleIDs = append(articleIDs, article.ID)
 	}
@@ -208,9 +271,9 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 
 	// Logged user check if followed author
 	loggedUserFollowedAuthorMap := map[domain.ID]bool{}
-	if arg.AuthArg.Payload != nil {
+	if arg.authArg.Payload != nil {
 		followed, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
-			FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+			FollowerIDs: []domain.ID{arg.authArg.Payload.UserID},
 			FolloweeIDs: authorIDs,
 		})
 		if err != nil {
@@ -262,10 +325,10 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 
 	// Get favorites by logged user
 	loggedUserFavoritedArticleMap := map[domain.ID]bool{}
-	if arg.AuthArg.Payload != nil {
+	if arg.authArg.Payload != nil {
 		favorites, err := s.property.repo.Article().FilterFavorite(ctx, port.FilterFavoritePayload{
 			ArticleIDs: articleIDs,
-			UserIDs:    []domain.ID{arg.AuthArg.Payload.UserID},
+			UserIDs:    []domain.ID{arg.authArg.Payload.UserID},
 		})
 		if err != nil {
 			return port.ListArticleResult{}, exception.Into(err)
@@ -275,17 +338,21 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		}
 	}
 
-	// compose result
-	for i, article := range result.Articles {
-		result.Articles[i].TagNames = articleTagMap[article.ID]
-		result.Articles[i].FavoriteCount = favoriteCountMap[article.ID]
-		result.Articles[i].IsFavorite = loggedUserFavoritedArticleMap[article.ID]
-		author, ok := authorMap[article.AuthorID]
-		if ok {
+	// Compose result
+	for index, article := range arg.articles {
+		article.TagNames = articleTagMap[article.ID]
+		article.FavoriteCount = favoriteCountMap[article.ID]
+		article.IsFavorite = loggedUserFavoritedArticleMap[article.ID]
+		if author, ok := authorMap[article.AuthorID]; ok {
 			author.IsFollowed = loggedUserFollowedAuthorMap[author.ID]
-			result.Articles[i].Author = author
+			article.Author = author
 		}
+		arg.articles[index] = article
 	}
 
+	result := port.ListArticleResult{
+		Articles: arg.articles,
+		Count:    len(arg.articles),
+	}
 	return result, nil
 }
