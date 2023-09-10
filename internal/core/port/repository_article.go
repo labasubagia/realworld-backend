@@ -73,6 +73,7 @@ type ArticleRepository interface {
 	AssignArticleTags(context.Context, AssignTagPayload) ([]domain.ArticleTag, error)
 
 	AddFavorite(context.Context, domain.ArticleFavorite) (domain.ArticleFavorite, error)
+	RemoveFavorite(context.Context, domain.ArticleFavorite) (domain.ArticleFavorite, error)
 	FilterFavorite(context.Context, FilterFavoritePayload) ([]domain.ArticleFavorite, error)
 	FilterFavoriteCount(context.Context, FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error)
 

@@ -65,6 +65,10 @@ func (server *Server) setupRouter() {
 	commentRouter.GET("/comments", server.ListComments)
 	commentRouter.DELETE("/comments/:comment_id", server.DeleteComment)
 
+	favoriteArticleRouter := articleRouter.Group("/:slug/favorite")
+	favoriteArticleRouter.POST("/", server.AddFavoriteArticle)
+	favoriteArticleRouter.DELETE("/", server.RemoveFavoriteArticle)
+
 	server.router = router
 }
 

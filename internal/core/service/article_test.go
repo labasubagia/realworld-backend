@@ -199,18 +199,34 @@ func TestDeleteArticle(t *testing.T) {
 	require.Equal(t, exception.TypeNotFound, fail.Type)
 }
 
-func TestAddFavoriteArticleOK(t *testing.T) {
+func TestFavoriteArticle(t *testing.T) {
 	author, authorAuth, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)
+	article := createArticle(t, createArticleArg(author, authorAuth))
 
-	resultCreateArticle := createArticle(t, createArticleArg(author, authorAuth))
-	result, err := testService.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
+	// add favorite
+	addFav, err := testService.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
 		AuthArg: readerAuth,
-		Slug:    resultCreateArticle.Article.Slug,
+		Slug:    article.Article.Slug,
 		UserID:  reader.ID,
 	})
 	require.Nil(t, err)
-	require.Equal(t, resultCreateArticle.Article.Title, result.Article.Title)
+	require.Equal(t, article.Article.Title, addFav.Article.Title)
+	require.Equal(t, article.Article.ID, addFav.Article.ID)
+	require.True(t, addFav.Article.IsFavorite)
+	require.Equal(t, 1, addFav.Article.FavoriteCount)
+
+	// remove favorite
+	removeFav, err := testService.Article().RemoveFavorite(context.Background(), port.RemoveFavoriteParams{
+		AuthArg: readerAuth,
+		Slug:    article.Article.Slug,
+		UserID:  reader.ID,
+	})
+	require.Nil(t, err)
+	require.Equal(t, article.Article.Title, removeFav.Article.Title)
+	require.Equal(t, article.Article.ID, removeFav.Article.ID)
+	require.False(t, removeFav.Article.IsFavorite)
+	require.Equal(t, 0, removeFav.Article.FavoriteCount)
 }
 
 func TestFeedArticle(t *testing.T) {

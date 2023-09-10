@@ -189,6 +189,19 @@ func (r *articleRepo) AddFavorite(ctx context.Context, arg domain.ArticleFavorit
 	return favorite, nil
 }
 
+func (r *articleRepo) RemoveFavorite(ctx context.Context, arg domain.ArticleFavorite) (domain.ArticleFavorite, error) {
+	favorite := arg
+	_, err := r.db.NewDelete().
+		Model(&favorite).
+		Where("article_id = ?", arg.ArticleID).
+		Where("user_id = ?", arg.UserID).
+		Exec(ctx)
+	if err != nil {
+		return domain.ArticleFavorite{}, intoException(err)
+	}
+	return favorite, nil
+}
+
 func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavoritePayload) ([]domain.ArticleFavorite, error) {
 	articleFavorites := []domain.ArticleFavorite{}
 	query := r.db.NewSelect().Model(&articleFavorites)

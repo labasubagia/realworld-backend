@@ -53,9 +53,13 @@ type AddFavoriteParams struct {
 	UserID  domain.ID
 }
 
+type RemoveFavoriteParams AddFavoriteParams
+
 type AddFavoriteResult struct {
 	Article domain.Article
 }
+
+type RemoveFavoriteResult AddFavoriteResult
 
 type GetArticleParams struct {
 	AuthArg AuthParams
@@ -104,4 +108,5 @@ type ArticleService interface {
 	DeleteComment(context.Context, DeleteCommentParams) error
 
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
+	RemoveFavorite(context.Context, RemoveFavoriteParams) (RemoveFavoriteResult, error)
 }
