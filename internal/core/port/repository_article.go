@@ -55,4 +55,5 @@ type ArticleRepository interface {
 
 	AddFavorite(context.Context, domain.ArticleFavorite) (domain.ArticleFavorite, error)
 	FilterFavorite(context.Context, FilterFavoritePayload) ([]domain.ArticleFavorite, error)
+	FilterFavoriteCount(context.Context, FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error)
 }

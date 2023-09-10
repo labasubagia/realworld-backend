@@ -91,8 +91,8 @@ func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoritePa
 
 func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (result port.ListArticleResult, err error) {
 
+	// filter authors
 	authorIDs := []domain.ID{}
-	authorMap := map[domain.ID]domain.User{}
 	if len(arg.AuthorNames) > 0 {
 		authors, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{
 			Usernames: arg.AuthorNames,
@@ -102,10 +102,10 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		}
 		for _, author := range authors {
 			authorIDs = append(authorIDs, author.ID)
-			authorMap[author.ID] = author
 		}
 	}
 
+	// filter tags
 	taggedArticleIDs := []domain.ID{}
 	if len(arg.Tags) > 0 {
 
@@ -131,6 +131,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		}
 	}
 
+	// filter favorites by users
 	favoritedArticleIDs := []domain.ID{}
 	if len(arg.FavoritedNames) > 0 {
 		// find users
@@ -157,7 +158,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		}
 	}
 
-	// get articles
+	// Get articles
 	result.Articles, err = s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
 		IDs:       append(arg.IDs, append(taggedArticleIDs, favoritedArticleIDs...)...),
 		AuthorIDs: authorIDs,
@@ -168,8 +169,104 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		return port.ListArticleResult{}, exception.Into(err)
 	}
 	result.Count = len(result.Articles)
+
+	// get article id and author id
+	authorIDs = []domain.ID{}
+	articleIDs := []domain.ID{}
+	for _, article := range result.Articles {
+		authorIDs = append(authorIDs, article.AuthorID)
+		articleIDs = append(articleIDs, article.ID)
+	}
+
+	// Get article authors
+	authors, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{
+		IDs: authorIDs,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+	authorMap := map[domain.ID]domain.User{}
+	for _, author := range authors {
+		authorMap[author.ID] = author
+	}
+
+	// Logged user check if followed author
+	loggedUserFollowedAuthorMap := map[domain.ID]bool{}
+	if arg.AuthArg.Payload != nil {
+		followed, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+			FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+			FolloweeIDs: authorIDs,
+		})
+		if err != nil {
+			return port.ListArticleResult{}, exception.Into(err)
+		}
+		for _, follow := range followed {
+			loggedUserFollowedAuthorMap[follow.FolloweeID] = true
+		}
+	}
+
+	// Get article tags
+	articleTags, err := s.property.repo.Article().FilterArticleTags(ctx, port.FilterArticleTagPayload{
+		ArticleIDs: articleIDs,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+	tagIDs := []domain.ID{}
+	for _, articleTag := range articleTags {
+		tagIDs = append(tagIDs, articleTag.TagID)
+	}
+	tags, err := s.property.repo.Article().FilterTags(ctx, port.FilterTagPayload{
+		IDs: tagIDs,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+	tagMap := map[domain.ID]string{}
+	for _, tag := range tags {
+		tagMap[tag.ID] = tag.Name
+	}
+	// compose article tags
+	articleTagMap := map[domain.ID][]string{} // article_id:[]tag_name
+	for _, articleTag := range articleTags {
+		articleTagMap[articleTag.ArticleID] = append(articleTagMap[articleTag.ArticleID], tagMap[articleTag.TagID])
+	}
+
+	// Get favorite counts
+	favoriteCounts, err := s.property.repo.Article().FilterFavoriteCount(ctx, port.FilterFavoritePayload{
+		ArticleIDs: articleIDs,
+	})
+	if err != nil {
+		return port.ListArticleResult{}, exception.Into(err)
+	}
+	favoriteCountMap := map[domain.ID]int{}
+	for _, favorite := range favoriteCounts {
+		favoriteCountMap[favorite.ArticleID] = favorite.Count
+	}
+
+	// Get favorites by logged user
+	loggedUserFavoritedArticleMap := map[domain.ID]bool{}
+	if arg.AuthArg.Payload != nil {
+		favorites, err := s.property.repo.Article().FilterFavorite(ctx, port.FilterFavoritePayload{
+			ArticleIDs: articleIDs,
+			UserIDs:    []domain.ID{arg.AuthArg.Payload.UserID},
+		})
+		if err != nil {
+			return port.ListArticleResult{}, exception.Into(err)
+		}
+		for _, favorited := range favorites {
+			loggedUserFavoritedArticleMap[favorited.ArticleID] = true
+		}
+	}
+
+	// compose result
 	for i, article := range result.Articles {
-		if author, ok := authorMap[article.AuthorID]; ok {
+		result.Articles[i].TagNames = articleTagMap[article.ID]
+		result.Articles[i].FavoriteCount = favoriteCountMap[article.ID]
+		result.Articles[i].IsFavorite = loggedUserFavoritedArticleMap[article.ID]
+		author, ok := authorMap[article.AuthorID]
+		if ok {
+			author.IsFollowed = loggedUserFollowedAuthorMap[author.ID]
 			result.Articles[i].Author = author
 		}
 	}

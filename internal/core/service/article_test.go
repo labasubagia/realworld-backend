@@ -102,8 +102,20 @@ func TestAddFavoriteArticleOK(t *testing.T) {
 func TestListArticleOK(t *testing.T) {
 	author, _, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)
+
 	tags := []string{util.RandomString(4), util.RandomString(5)}
+	sort.Strings(tags)
+
 	ctx := context.Background()
+
+	// create other author (pollute)
+	polluteN := 5
+	otherAuthor, _, _ := createRandomUser(t)
+	for i := 0; i < polluteN; i++ {
+		arg := createArticleArg(otherAuthor)
+		arg.Tags = []string{}
+		createArticle(t, arg)
+	}
 
 	// create articles
 	N := 10
@@ -141,6 +153,10 @@ func TestListArticleOK(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, N, result.Count)
 		require.Len(t, result.Articles, N)
+		for _, article := range result.Articles {
+			require.Equal(t, author.ID, article.AuthorID)
+			require.NotEqual(t, otherAuthor.ID, article.AuthorID)
+		}
 	})
 
 	t.Run("Filter by tags", func(t *testing.T) {
@@ -148,11 +164,14 @@ func TestListArticleOK(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, N, result.Count)
 		require.Len(t, result.Articles, N)
+		for _, article := range result.Articles {
+			sort.Strings(article.TagNames)
+			require.Equal(t, tags, article.TagNames)
+		}
 	})
 
-	// favorites and filter
 	t.Run("Filter by favorites", func(t *testing.T) {
-		favN := 2
+		favN := int(util.RandomInt(1, int64(N)))
 		for i := 0; i < favN; i++ {
 			article := createdArticles[i]
 			favResult, err := testService.Article().AddFavorite(ctx, port.AddFavoriteParams{
@@ -163,6 +182,7 @@ func TestListArticleOK(t *testing.T) {
 			require.Nil(t, err)
 			require.NotEmpty(t, favResult)
 		}
+
 		result, err := testService.Article().List(ctx, port.ListArticleParams{
 			AuthArg:        readerAuth,
 			FavoritedNames: []string{reader.Username},
@@ -170,6 +190,10 @@ func TestListArticleOK(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, favN, result.Count)
 		require.Len(t, result.Articles, favN)
+		for _, article := range result.Articles {
+			require.Greater(t, article.FavoriteCount, 0)
+			require.True(t, article.IsFavorite)
+		}
 	})
 }
 

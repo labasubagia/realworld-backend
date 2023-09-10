@@ -186,7 +186,7 @@ func (server *Server) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-type UserProfile struct {
+type Profile struct {
 	Username  string `json:"username"`
 	Bio       string `json:"bio"`
 	Image     string `json:"image"`
@@ -194,7 +194,7 @@ type UserProfile struct {
 }
 
 type ProfileUserResult struct {
-	Profile UserProfile `json:"profile"`
+	Profile Profile `json:"profile"`
 }
 
 type FollowUserResult ProfileUserResult
@@ -213,7 +213,7 @@ func (server *Server) Profile(c *gin.Context) {
 		return
 	}
 	res := ProfileUserResult{
-		Profile: UserProfile{
+		Profile: Profile{
 			Username:  result.User.Username,
 			Bio:       result.User.Bio,
 			Image:     result.User.Image,
@@ -235,7 +235,7 @@ func (server *Server) FollowUser(c *gin.Context) {
 		AuthArg:  authArg,
 	})
 	res := FollowUserResult{
-		Profile: UserProfile{
+		Profile: Profile{
 			Username:  result.User.Username,
 			Image:     result.User.Image,
 			Bio:       result.User.Bio,
@@ -257,7 +257,7 @@ func (server *Server) UnFollowUser(c *gin.Context) {
 		AuthArg:  authArg,
 	})
 	res := UnFollowUserResult{
-		Profile: UserProfile{
+		Profile: Profile{
 			Username:  result.User.Username,
 			Image:     result.User.Image,
 			Bio:       result.User.Bio,

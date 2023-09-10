@@ -20,6 +20,7 @@ type User struct {
 	Bio           string    `bun:"bio"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+	IsFollowed    bool      `bun:"-"`
 }
 
 func NewUser(arg User) (User, error) {

@@ -17,9 +17,11 @@ type Article struct {
 	Body          string    `bun:"body,notnull"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
-	Tags          []Tag     `bun:"-"`
-	TagNames      []string  `bun:"-"`
-	Author        User      `bun:"-"`
+
+	TagNames      []string `bun:"-"`
+	Author        User     `bun:"-"`
+	IsFavorite    bool     `bun:"-"`
+	FavoriteCount int      `bun:"-"`
 }
 
 func RandomArticle(author User) Article {
@@ -58,4 +60,10 @@ type ArticleFavorite struct {
 	bun.BaseModel `bun:"table:article_favorites,alias:af"`
 	ArticleID     ID `bun:"article_id,notnull"`
 	UserID        ID `bun:"user_id,notnull"`
+}
+
+type ArticleFavoriteCount struct {
+	bun.BaseModel `bun:"table:article_favorites,alias:af"`
+	ArticleID     ID  `bun:"article_id"`
+	Count         int `bun:"favorite_count"`
 }

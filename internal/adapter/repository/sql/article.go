@@ -131,22 +131,6 @@ func (r *articleRepo) AssignArticleTags(ctx context.Context, arg port.AssignTagP
 	return articleTags, nil
 }
 
-func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavoritePayload) ([]domain.ArticleFavorite, error) {
-	articleFavorites := []domain.ArticleFavorite{}
-	query := r.db.NewSelect().Model(&articleFavorites)
-	if len(arg.UserIDs) > 0 {
-		query = query.Where("user_id IN (?)", bun.In(arg.UserIDs))
-	}
-	if len(arg.ArticleIDs) > 0 {
-		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
-	}
-	err := query.Scan(ctx)
-	if err != nil {
-		return []domain.ArticleFavorite{}, intoException(err)
-	}
-	return articleFavorites, nil
-}
-
 func (r *articleRepo) FilterArticleTags(ctx context.Context, arg port.FilterArticleTagPayload) ([]domain.ArticleTag, error) {
 	articleTags := []domain.ArticleTag{}
 	query := r.db.NewSelect().Model(&articleTags)
@@ -170,4 +154,34 @@ func (r *articleRepo) AddFavorite(ctx context.Context, arg domain.ArticleFavorit
 		return domain.ArticleFavorite{}, intoException(err)
 	}
 	return favorite, nil
+}
+
+func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavoritePayload) ([]domain.ArticleFavorite, error) {
+	articleFavorites := []domain.ArticleFavorite{}
+	query := r.db.NewSelect().Model(&articleFavorites)
+	if len(arg.UserIDs) > 0 {
+		query = query.Where("user_id IN (?)", bun.In(arg.UserIDs))
+	}
+	if len(arg.ArticleIDs) > 0 {
+		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.ArticleFavorite{}, intoException(err)
+	}
+	return articleFavorites, nil
+}
+
+func (r *articleRepo) FilterFavoriteCount(ctx context.Context, filter port.FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error) {
+	counts := []domain.ArticleFavoriteCount{}
+	err := r.db.NewSelect().
+		Model(&counts).
+		Column("article_id").
+		ColumnExpr("count(article_id) as favorite_count").
+		Group("article_id").
+		Scan(ctx)
+	if err != nil {
+		return []domain.ArticleFavoriteCount{}, intoException(err)
+	}
+	return counts, nil
 }

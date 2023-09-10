@@ -14,6 +14,8 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
+const formatTime string = "2006-01-02T15:04:05.999Z"
+
 type Server struct {
 	config  util.Config
 	router  *gin.Engine
@@ -48,6 +50,10 @@ func (server *Server) setupRouter() {
 	profileRouter.GET("/", server.Profile)
 	profileRouter.POST("/follow", server.FollowUser)
 	profileRouter.DELETE("/follow", server.UnFollowUser)
+
+	articleRouter := router.Group("/articles")
+	articleRouter.Use(server.AuthMiddleware(false))
+	articleRouter.GET("/", server.ListArticle)
 
 	server.router = router
 }
