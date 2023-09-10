@@ -41,9 +41,19 @@ type AddFavoriteResult struct {
 	Article domain.Article
 }
 
+type GetArticleParams struct {
+	AuthArg AuthParams
+	Slug    string
+}
+
+type GetArticleResult struct {
+	Article domain.Article
+}
+
 type ArticleService interface {
 	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
 	List(context.Context, ListArticleParams) (ListArticleResult, error)
 	Feed(context.Context, ListArticleParams) (ListArticleResult, error)
+	Get(context.Context, GetArticleParams) (GetArticleResult, error)
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
 }

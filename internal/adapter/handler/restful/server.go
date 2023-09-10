@@ -54,7 +54,8 @@ func (server *Server) setupRouter() {
 	articleRouter := router.Group("/articles")
 	articleRouter.Use(server.AuthMiddleware(false))
 	articleRouter.GET("/", server.ListArticle)
-	articleRouter.GET("/feed", server.Feed)
+	articleRouter.GET("/feed", server.FeedArticle)
+	articleRouter.GET("/:slug", server.GetArticle)
 
 	server.router = router
 }

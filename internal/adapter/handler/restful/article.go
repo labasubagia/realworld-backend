@@ -89,7 +89,7 @@ func (server *Server) ListArticle(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (server *Server) Feed(c *gin.Context) {
+func (server *Server) FeedArticle(c *gin.Context) {
 	offset, limit := getPagination(c)
 	authArg, err := getAuthArg(c)
 	if err != nil {
@@ -136,5 +136,49 @@ func (server *Server) Feed(c *gin.Context) {
 		})
 	}
 
+	c.JSON(http.StatusOK, res)
+}
+
+type GetArticleResult struct {
+	Article Article `json:"article"`
+}
+
+func (server *Server) GetArticle(c *gin.Context) {
+	slug := c.Param("slug")
+	authArg, _ := getAuthArg(c)
+
+	result, err := server.service.Article().Get(context.Background(), port.GetArticleParams{
+		AuthArg: authArg,
+		Slug:    slug,
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	tags := []string{}
+	if len(result.Article.TagNames) > 0 {
+		tags = result.Article.TagNames
+	}
+
+	res := GetArticleResult{
+		Article{
+			Slug:           result.Article.Slug,
+			Title:          result.Article.Title,
+			Description:    result.Article.Description,
+			Body:           result.Article.Body,
+			TagList:        tags,
+			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
+			Favorited:      result.Article.IsFavorite,
+			FavoritesCount: result.Article.FavoriteCount,
+			Author: Profile{
+				Username:  result.Article.Author.Username,
+				Bio:       result.Article.Author.Bio,
+				Image:     result.Article.Author.Image,
+				Following: result.Article.Author.IsFollowed,
+			},
+		},
+	}
 	c.JSON(http.StatusOK, res)
 }

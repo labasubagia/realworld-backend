@@ -90,6 +90,27 @@ func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoritePa
 	return result, nil
 }
 
+func (s *articleService) Get(ctx context.Context, arg port.GetArticleParams) (port.GetArticleResult, error) {
+	articles, err := s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
+		Slugs: []string{arg.Slug},
+	})
+	if err != nil {
+		return port.GetArticleResult{}, exception.Into(err)
+	}
+	articleInfos, err := s.infoArticles(ctx, GetListArticleInfoParams{authArg: arg.AuthArg, articles: articles})
+	if err != nil {
+		return port.GetArticleResult{}, exception.Into(err)
+	}
+	if len(articleInfos.Articles) < 1 {
+		return port.GetArticleResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	}
+
+	result := port.GetArticleResult{
+		Article: articleInfos.Articles[0],
+	}
+	return result, nil
+}
+
 func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (result port.ListArticleResult, err error) {
 
 	// filter authors
@@ -209,11 +230,11 @@ func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (
 		return port.ListArticleResult{}, exception.Into(err)
 	}
 	if len(followingAuthors) == 0 {
-		res := port.ListArticleResult{
+		withInfos := port.ListArticleResult{
 			Articles: []domain.Article{},
 			Count:    0,
 		}
-		return res, nil
+		return withInfos, nil
 	}
 
 	authorIDs := []domain.ID{}

@@ -262,6 +262,24 @@ func TestListArticleOK(t *testing.T) {
 	})
 }
 
+func TestGetArticle(t *testing.T) {
+	author, _, _ := createRandomUser(t)
+	_, readerAuth, _ := createRandomUser(t)
+
+	article := createRandomArticle(t, author)
+	ctx := context.Background()
+
+	result, err := testService.Article().Get(ctx, port.GetArticleParams{
+		AuthArg: readerAuth,
+		Slug:    article.Article.Slug,
+	})
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, article.Article.Title, result.Article.Title)
+	require.Equal(t, article.Article.Slug, result.Article.Slug)
+	require.Equal(t, article.Article.Body, result.Article.Body)
+}
+
 func createRandomArticle(t *testing.T, author domain.User) port.CreateArticleTxResult {
 	return createArticle(t, createArticleArg(author))
 }
