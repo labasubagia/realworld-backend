@@ -42,7 +42,7 @@ func TestCreateArticleOkWithTags(t *testing.T) {
 
 	// tags to have N=len(allTags) tags in DB
 	allTags := append(arg1.Tags, append(arg2.Tags, arg3.Tags...)...)
-	tags, err := testRepo.Article().FilterTags(ctx, port.FilterTagParams{Names: allTags})
+	tags, err := testRepo.Article().FilterTags(ctx, port.FilterTagPayload{Names: allTags})
 	require.Nil(t, err)
 	require.Len(t, tags, len(allTags))
 }
@@ -80,9 +80,97 @@ func TestCreateArticleConcurrentOK(t *testing.T) {
 	}
 
 	// tags expected N=len(arg.Tags) in DB
-	tags, err := testRepo.Article().FilterTags(context.Background(), port.FilterTagParams{Names: arg.Tags})
+	tags, err := testRepo.Article().FilterTags(context.Background(), port.FilterTagPayload{Names: arg.Tags})
 	require.Nil(t, err)
 	require.Len(t, tags, len(arg.Tags))
+}
+
+func TestAddFavoriteArticleOK(t *testing.T) {
+	author, _, _ := createRandomUser(t)
+	reader, readerAuth, _ := createRandomUser(t)
+
+	resultCreateArticle := createArticle(t, createArticleArg(author))
+	result, err := testService.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
+		AuthArg: readerAuth,
+		Slug:    resultCreateArticle.Article.Slug,
+		UserID:  reader.ID,
+	})
+	require.Nil(t, err)
+	require.Equal(t, resultCreateArticle.Article.Title, result.Article.Title)
+}
+
+func TestListArticleOK(t *testing.T) {
+	author, _, _ := createRandomUser(t)
+	reader, readerAuth, _ := createRandomUser(t)
+	tags := []string{util.RandomString(4), util.RandomString(5)}
+	ctx := context.Background()
+
+	// create articles
+	N := 10
+	createdArticles := make([]domain.Article, N)
+	for i := 0; i < N; i++ {
+		arg := createArticleArg(author)
+		arg.Tags = tags
+		createResult := createArticle(t, arg)
+		// assign in desc order
+		createdArticles[N-1-i] = createResult.Article
+	}
+
+	t.Run("Paginate", func(t *testing.T) {
+		limit, offset := 3, 2
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			Limit:  limit,
+			Offset: offset,
+		})
+		require.Nil(t, err)
+		require.Equal(t, limit, result.Count)
+		require.Len(t, result.Articles, limit)
+
+		expectedArticleIDs, articleIDs := []domain.ID{}, []domain.ID{}
+		for i := 0; i < limit; i++ {
+			expectedArticleIDs = append(expectedArticleIDs, createdArticles[offset : offset+limit][i].ID)
+			articleIDs = append(articleIDs, result.Articles[i].ID)
+		}
+		require.Equal(t, expectedArticleIDs, articleIDs)
+	})
+
+	t.Run("Filter by author", func(t *testing.T) {
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			AuthorNames: []string{author.Username},
+		})
+		require.Nil(t, err)
+		require.Equal(t, N, result.Count)
+		require.Len(t, result.Articles, N)
+	})
+
+	t.Run("Filter by tags", func(t *testing.T) {
+		result, err := testService.Article().List(ctx, port.ListArticleParams{Tags: tags})
+		require.Nil(t, err)
+		require.Equal(t, N, result.Count)
+		require.Len(t, result.Articles, N)
+	})
+
+	// favorites and filter
+	t.Run("Filter by favorites", func(t *testing.T) {
+		favN := 2
+		for i := 0; i < favN; i++ {
+			article := createdArticles[i]
+			favResult, err := testService.Article().AddFavorite(ctx, port.AddFavoriteParams{
+				AuthArg: readerAuth,
+				Slug:    article.Slug,
+				UserID:  reader.ID,
+			})
+			require.Nil(t, err)
+			require.NotEmpty(t, favResult)
+		}
+		result, err := testService.Article().List(ctx, port.ListArticleParams{
+			AuthArg:        readerAuth,
+			FavoritedNames: []string{reader.Username},
+		})
+		require.Nil(t, err)
+		require.Equal(t, favN, result.Count)
+		require.Len(t, result.Articles, favN)
+	})
 }
 
 func createRandomArticle(t *testing.T, author domain.User) port.CreateArticleTxResult {

@@ -19,8 +19,8 @@ func NewArticleRepository(db bun.IDB) port.ArticleRepository {
 	}
 }
 
-func (r *articleRepo) CreateArticle(ctx context.Context, req port.CreateArticleParams) (domain.Article, error) {
-	article := req.Article
+func (r *articleRepo) CreateArticle(ctx context.Context, arg port.CreateArticlePayload) (domain.Article, error) {
+	article := arg.Article
 	_, err := r.db.NewInsert().Model(&article).Exec(ctx)
 	if err != nil {
 		return domain.Article{}, intoException(err)
@@ -28,7 +28,42 @@ func (r *articleRepo) CreateArticle(ctx context.Context, req port.CreateArticleP
 	return article, nil
 }
 
-func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParams) ([]domain.Tag, error) {
+func (r *articleRepo) FilterArticle(ctx context.Context, filter port.FilterArticlePayload) ([]domain.Article, error) {
+	articles := []domain.Article{}
+	query := r.db.NewSelect().Model(&articles)
+	if len(filter.IDs) > 0 {
+		query = query.Where("id IN (?)", bun.In(filter.IDs))
+	}
+	if len(filter.Slugs) > 0 {
+		query = query.Where("slug IN (?)", bun.In(filter.Slugs))
+	}
+	if len(filter.AuthorIDs) > 0 {
+		query = query.Where("author_id IN (?)", bun.In(filter.AuthorIDs))
+	}
+	if filter.Limit > 0 {
+		query = query.Limit(filter.Limit)
+	}
+	query = query.Offset(filter.Offset)
+	query = query.Order("created_at DESC")
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.Article{}, nil
+	}
+	return articles, nil
+}
+
+func (r *articleRepo) FindOneArticle(ctx context.Context, filter port.FilterArticlePayload) (domain.Article, error) {
+	articles, err := r.FilterArticle(ctx, filter)
+	if err != nil {
+		return domain.Article{}, intoException(err)
+	}
+	if len(articles) < 1 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	}
+	return articles[0], nil
+}
+
+func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagPayload) ([]domain.Tag, error) {
 	result := []domain.Tag{}
 	query := r.db.NewSelect().Model(&result)
 	if len(filter.IDs) > 0 {
@@ -44,12 +79,12 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagParam
 	return result, nil
 }
 
-func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsParams) ([]domain.Tag, error) {
+func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPayload) ([]domain.Tag, error) {
 	if len(arg.Tags) == 0 {
 		return []domain.Tag{}, exception.Validation().AddError("tags", "empty")
 	}
 
-	existing, err := r.FilterTags(ctx, port.FilterTagParams{Names: arg.Tags})
+	existing, err := r.FilterTags(ctx, port.FilterTagPayload{Names: arg.Tags})
 	if err != nil {
 		return []domain.Tag{}, intoException(err)
 	}
@@ -76,7 +111,7 @@ func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPa
 	return append(existing, newTags...), nil
 }
 
-func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]domain.ArticleTag, error) {
+func (r *articleRepo) AssignArticleTags(ctx context.Context, arg port.AssignTagPayload) ([]domain.ArticleTag, error) {
 	if len(arg.TagIDs) == 0 {
 		return []domain.ArticleTag{}, exception.Validation().AddError("tags", "empty")
 	}
@@ -94,4 +129,45 @@ func (r *articleRepo) AssignTags(ctx context.Context, arg port.AssignTags) ([]do
 	}
 
 	return articleTags, nil
+}
+
+func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavoritePayload) ([]domain.ArticleFavorite, error) {
+	articleFavorites := []domain.ArticleFavorite{}
+	query := r.db.NewSelect().Model(&articleFavorites)
+	if len(arg.UserIDs) > 0 {
+		query = query.Where("user_id IN (?)", bun.In(arg.UserIDs))
+	}
+	if len(arg.ArticleIDs) > 0 {
+		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.ArticleFavorite{}, intoException(err)
+	}
+	return articleFavorites, nil
+}
+
+func (r *articleRepo) FilterArticleTags(ctx context.Context, arg port.FilterArticleTagPayload) ([]domain.ArticleTag, error) {
+	articleTags := []domain.ArticleTag{}
+	query := r.db.NewSelect().Model(&articleTags)
+	if len(arg.TagIDs) > 0 {
+		query = query.Where("tag_id IN (?)", bun.In(arg.TagIDs))
+	}
+	if len(arg.ArticleIDs) > 0 {
+		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.ArticleTag{}, intoException(err)
+	}
+	return articleTags, nil
+}
+
+func (r *articleRepo) AddFavorite(ctx context.Context, arg domain.ArticleFavorite) (domain.ArticleFavorite, error) {
+	favorite := arg
+	_, err := r.db.NewInsert().Model(&favorite).Exec(ctx)
+	if err != nil {
+		return domain.ArticleFavorite{}, intoException(err)
+	}
+	return favorite, nil
 }

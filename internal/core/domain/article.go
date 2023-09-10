@@ -17,6 +17,9 @@ type Article struct {
 	Body          string    `bun:"body,notnull"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+	Tags          []Tag     `bun:"-"`
+	TagNames      []string  `bun:"-"`
+	Author        User      `bun:"-"`
 }
 
 func RandomArticle(author User) Article {
@@ -53,7 +56,6 @@ type Comment struct {
 
 type ArticleFavorite struct {
 	bun.BaseModel `bun:"table:article_favorites,alias:af"`
-	ID            ID `bun:"id,pk,autoincrement"`
 	ArticleID     ID `bun:"article_id,notnull"`
 	UserID        ID `bun:"user_id,notnull"`
 }
