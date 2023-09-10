@@ -7,6 +7,7 @@ import (
 )
 
 type CreateArticleTxParams struct {
+	AuthArg AuthParams
 	Article domain.Article
 	Tags    []string
 }

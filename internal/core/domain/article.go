@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/labasubagia/realworld-backend/internal/core/util"
@@ -24,14 +25,32 @@ type Article struct {
 	FavoriteCount int      `bun:"-"`
 }
 
+func NewArticle(arg Article) Article {
+	now := time.Now()
+	return Article{
+		AuthorID:    arg.AuthorID,
+		Title:       arg.Title,
+		Slug:        CreateArticleSlug(arg.Title),
+		Description: arg.Description,
+		Body:        arg.Body,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+}
+
 func RandomArticle(author User) Article {
+	title := util.RandomString(10)
 	return Article{
 		AuthorID:    author.ID,
-		Title:       util.RandomString(10),
+		Title:       title,
+		Slug:        CreateArticleSlug(title),
 		Description: util.RandomString(15),
-		Slug:        util.RandomString(5),
 		Body:        util.RandomString(20),
 	}
+}
+
+func CreateArticleSlug(value string) string {
+	return strings.ToLower(strings.ReplaceAll(value, " ", "-"))
 }
 
 type Tag struct {

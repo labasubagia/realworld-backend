@@ -13,16 +13,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCreateArticleUnauthenticated(t *testing.T) {
+	author, authorAuth, _ := createRandomUser(t)
+	arg := createArticleArg(author, authorAuth)
+	result, err := testService.Article().Create(context.Background(), port.CreateArticleTxParams{
+		Article: arg.Article,
+	})
+	require.NotNil(t, err)
+	require.Empty(t, result)
+	fail, ok := err.(*exception.Exception)
+	require.True(t, ok)
+	require.Equal(t, exception.TypePermissionDenied, fail.Type)
+}
+
 func TestCreateArticleOK(t *testing.T) {
-	author, _, _ := createRandomUser(t)
-	createRandomArticle(t, author)
+	author, authorAuth, _ := createRandomUser(t)
+	createRandomArticle(t, author, authorAuth)
 }
 
 func TestCreateArticleOkWithTags(t *testing.T) {
 	ctx := context.Background()
 
-	author, _, _ := createRandomUser(t)
-	arg1 := createArticleArg(author)
+	author, authorAuth, _ := createRandomUser(t)
+	arg1 := createArticleArg(author, authorAuth)
 
 	// 2 article with same tags
 	// new N=length(arg1.Tags) tags expected in DB
@@ -31,13 +44,13 @@ func TestCreateArticleOkWithTags(t *testing.T) {
 
 	// 1 article without tags
 	// no additional tags expected in DB
-	arg2 := createArticleArg(author)
+	arg2 := createArticleArg(author, authorAuth)
 	arg2.Tags = []string{}
 	createArticle(t, arg2)
 
 	// 1 article with different tags
 	// new tags expected in DB
-	arg3 := createArticleArg(author)
+	arg3 := createArticleArg(author, authorAuth)
 	createArticle(t, arg3)
 
 	// tags to have N=len(allTags) tags in DB
@@ -48,10 +61,9 @@ func TestCreateArticleOkWithTags(t *testing.T) {
 }
 
 func TestCreateArticleConcurrentOK(t *testing.T) {
-
 	// make valid data
-	author, _, _ := createRandomUser(t)
-	arg := createArticleArg(author)
+	author, authorAuth, _ := createRandomUser(t)
+	arg := createArticleArg(author, authorAuth)
 
 	// concurrent process
 	N := 5
@@ -86,10 +98,10 @@ func TestCreateArticleConcurrentOK(t *testing.T) {
 }
 
 func TestAddFavoriteArticleOK(t *testing.T) {
-	author, _, _ := createRandomUser(t)
+	author, authorAuth, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)
 
-	resultCreateArticle := createArticle(t, createArticleArg(author))
+	resultCreateArticle := createArticle(t, createArticleArg(author, authorAuth))
 	result, err := testService.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
 		AuthArg: readerAuth,
 		Slug:    resultCreateArticle.Article.Slug,
@@ -100,14 +112,14 @@ func TestAddFavoriteArticleOK(t *testing.T) {
 }
 
 func TestFeedArticle(t *testing.T) {
-	author, _, _ := createRandomUser(t)
+	author, authorAuth, _ := createRandomUser(t)
 	_, reader1Auth, _ := createRandomUser(t)
 	_, reader2Auth, _ := createRandomUser(t)
 	ctx := context.Background()
 
 	N := 5
 	for i := 0; i < N; i++ {
-		arg := createArticleArg(author)
+		arg := createArticleArg(author, authorAuth)
 		createArticle(t, arg)
 	}
 
@@ -132,7 +144,7 @@ func TestFeedArticle(t *testing.T) {
 }
 
 func TestListArticleOK(t *testing.T) {
-	author, _, _ := createRandomUser(t)
+	author, authorAuth, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)
 
 	tags := []string{util.RandomString(4), util.RandomString(5)}
@@ -142,9 +154,9 @@ func TestListArticleOK(t *testing.T) {
 
 	// create other author (pollute)
 	polluteN := 5
-	otherAuthor, _, _ := createRandomUser(t)
+	otherAuthor, otherAuthorAuth, _ := createRandomUser(t)
 	for i := 0; i < polluteN; i++ {
-		arg := createArticleArg(otherAuthor)
+		arg := createArticleArg(otherAuthor, otherAuthorAuth)
 		arg.Tags = []string{}
 		createArticle(t, arg)
 	}
@@ -153,7 +165,7 @@ func TestListArticleOK(t *testing.T) {
 	N := 10
 	createdArticles := make([]domain.Article, N)
 	for i := 0; i < N; i++ {
-		arg := createArticleArg(author)
+		arg := createArticleArg(author, authorAuth)
 		arg.Tags = tags
 		createResult := createArticle(t, arg)
 		// assign in desc order
@@ -263,10 +275,10 @@ func TestListArticleOK(t *testing.T) {
 }
 
 func TestGetArticle(t *testing.T) {
-	author, _, _ := createRandomUser(t)
+	author, authorAuth, _ := createRandomUser(t)
 	_, readerAuth, _ := createRandomUser(t)
 
-	article := createRandomArticle(t, author)
+	article := createRandomArticle(t, author, authorAuth)
 	ctx := context.Background()
 
 	result, err := testService.Article().Get(ctx, port.GetArticleParams{
@@ -280,8 +292,8 @@ func TestGetArticle(t *testing.T) {
 	require.Equal(t, article.Article.Body, result.Article.Body)
 }
 
-func createRandomArticle(t *testing.T, author domain.User) port.CreateArticleTxResult {
-	return createArticle(t, createArticleArg(author))
+func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) port.CreateArticleTxResult {
+	return createArticle(t, createArticleArg(author, authArg))
 }
 
 func createArticle(t *testing.T, arg port.CreateArticleTxParams) port.CreateArticleTxResult {
@@ -305,8 +317,9 @@ func createArticle(t *testing.T, arg port.CreateArticleTxParams) port.CreateArti
 	return result
 }
 
-func createArticleArg(author domain.User) port.CreateArticleTxParams {
+func createArticleArg(author domain.User, authorAuth port.AuthParams) port.CreateArticleTxParams {
 	return port.CreateArticleTxParams{
+		AuthArg: authorAuth,
 		Article: domain.RandomArticle(author),
 		Tags:    []string{util.RandomString(6), util.RandomString(7)},
 	}

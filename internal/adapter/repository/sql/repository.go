@@ -25,13 +25,17 @@ func NewSQLRepository(config util.Config) (port.Repository, error) {
 }
 
 func (r *sqlRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) error {
-	return r.db.RunInTx(
+	err := r.db.RunInTx(
 		ctx,
 		&sql.TxOptions{Isolation: sql.LevelSerializable},
 		func(ctx context.Context, tx bun.Tx) error {
 			return fn(create(tx))
 		},
 	)
+	if err != nil {
+		return intoException(err)
+	}
+	return nil
 }
 
 func create(db bun.IDB) port.Repository {

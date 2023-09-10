@@ -21,9 +21,17 @@ func NewArticleService(property serviceProperty) port.ArticleService {
 }
 
 func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxParams) (result port.CreateArticleTxResult, err error) {
+	if arg.AuthArg.Payload == nil {
+		return port.CreateArticleTxResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+	}
+
 	err = s.property.repo.Atomic(ctx, func(r port.Repository) error {
+
+		arg.Article.AuthorID = arg.AuthArg.Payload.UserID
+		newArticle := domain.NewArticle(arg.Article)
+
 		// create article
-		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticlePayload{Article: arg.Article})
+		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticlePayload{Article: newArticle})
 		if err != nil {
 			return exception.Into(err)
 		}
@@ -56,6 +64,20 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 	if err != nil {
 		return port.CreateArticleTxResult{}, exception.Into(err)
 	}
+
+	// Get decorated article
+	articleInfos, err := s.infoArticles(ctx, GetListArticleInfoParams{
+		authArg:  arg.AuthArg,
+		articles: []domain.Article{result.Article},
+	})
+	if err != nil {
+		return port.CreateArticleTxResult{}, exception.Into(err)
+	}
+	if len(articleInfos.Articles) == 0 {
+		return port.CreateArticleTxResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	}
+	result.Article = articleInfos.Articles[0]
+
 	return result, nil
 }
 
