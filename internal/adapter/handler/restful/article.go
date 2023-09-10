@@ -252,3 +252,72 @@ func (server *Server) CreateArticle(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, res)
 }
+
+type UpdateArticleParams struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Body        string `json:"body"`
+}
+
+type UpdateArticleRequest struct {
+	Article UpdateArticleParams `json:"article"`
+}
+
+type UpdateArticleResponse struct {
+	Article Article `json:"article"`
+}
+
+func (server *Server) UpdateArticle(c *gin.Context) {
+	slug := c.Param("slug")
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	var req UpdateArticleRequest
+	if err := c.BindJSON(&req); err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	result, err := server.service.Article().Update(context.Background(), port.UpdateArticleParams{
+		AuthArg: authArg,
+		Slug:    slug,
+		Article: domain.Article{
+			Title:       req.Article.Title,
+			Description: req.Article.Description,
+			Body:        req.Article.Body,
+		},
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	tags := []string{}
+	if len(result.Article.TagNames) > 0 {
+		tags = result.Article.TagNames
+	}
+	res := CreateArticleResponse{
+		Article: Article{
+			Slug:           result.Article.Slug,
+			Title:          result.Article.Title,
+			Description:    result.Article.Description,
+			Body:           result.Article.Body,
+			TagList:        tags,
+			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
+			Favorited:      result.Article.IsFavorite,
+			FavoritesCount: result.Article.FavoriteCount,
+			Author: Profile{
+				Username:  result.Article.Author.Username,
+				Bio:       result.Article.Author.Bio,
+				Image:     result.Article.Author.Image,
+				Following: result.Article.Author.IsFollowed,
+			},
+		},
+	}
+
+	c.JSON(http.StatusOK, res)
+}

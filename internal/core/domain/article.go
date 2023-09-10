@@ -25,32 +25,33 @@ type Article struct {
 	FavoriteCount int      `bun:"-"`
 }
 
+func (article *Article) SetTitle(value string) {
+	article.Title = value
+	article.Slug = strings.ToLower(strings.ReplaceAll(value, " ", "-"))
+}
+
 func NewArticle(arg Article) Article {
 	now := time.Now()
-	return Article{
+	article := Article{
 		AuthorID:    arg.AuthorID,
 		Title:       arg.Title,
-		Slug:        CreateArticleSlug(arg.Title),
 		Description: arg.Description,
 		Body:        arg.Body,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
+	article.SetTitle(arg.Title)
+	return article
 }
 
 func RandomArticle(author User) Article {
-	title := util.RandomString(10)
-	return Article{
+	article := Article{
 		AuthorID:    author.ID,
-		Title:       title,
-		Slug:        CreateArticleSlug(title),
 		Description: util.RandomString(15),
 		Body:        util.RandomString(20),
 	}
-}
-
-func CreateArticleSlug(value string) string {
-	return strings.ToLower(strings.ReplaceAll(value, " ", "-"))
+	article.SetTitle(util.RandomString(10))
+	return article
 }
 
 type Tag struct {

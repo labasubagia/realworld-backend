@@ -97,6 +97,73 @@ func TestCreateArticleConcurrentOK(t *testing.T) {
 	require.Len(t, tags, len(arg.Tags))
 }
 
+func TestUpdateArticle(t *testing.T) {
+	author, authorAuth, _ := createRandomUser(t)
+	ctx := context.Background()
+
+	newTitle := util.RandomString(3)
+	newBody := util.RandomString(5)
+	newDescription := util.RandomString(12)
+
+	t.Run("Update", func(t *testing.T) {
+		article := createRandomArticle(t, author, authorAuth)
+		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
+			AuthArg: authorAuth,
+			Slug:    article.Article.Slug,
+			Article: domain.Article{
+				Title:       newTitle,
+				Description: newDescription,
+				Body:        newBody,
+			},
+		})
+		require.Nil(t, err)
+		require.NotEmpty(t, result)
+		require.Equal(t, article.Article.ID, result.Article.ID)
+		require.Equal(t, newTitle, result.Article.Title)
+		require.NotEqual(t, article.Article.Slug, result.Article.Slug)
+		require.Equal(t, newDescription, result.Article.Description)
+		require.Equal(t, newBody, result.Article.Body)
+	})
+
+	t.Run("Partial", func(t *testing.T) {
+		article := createRandomArticle(t, author, authorAuth)
+		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
+			AuthArg: authorAuth,
+			Slug:    article.Article.Slug,
+			Article: domain.Article{
+				Title: newTitle,
+			},
+		})
+		require.Nil(t, err)
+		require.NotEmpty(t, result)
+		require.Equal(t, article.Article.ID, result.Article.ID)
+		require.Equal(t, newTitle, result.Article.Title)
+		require.NotEqual(t, article.Article.Slug, result.Article.Slug)
+		require.Equal(t, article.Article.Description, result.Article.Description)
+		require.Equal(t, article.Article.Body, result.Article.Body)
+	})
+
+	t.Run("Update other article fail", func(t *testing.T) {
+		_, randomAuth, _ := createRandomUser(t)
+
+		article := createRandomArticle(t, author, authorAuth)
+		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
+			AuthArg: randomAuth,
+			Slug:    article.Article.Slug,
+			Article: domain.Article{
+				Title:       newTitle,
+				Description: newDescription,
+				Body:        newBody,
+			},
+		})
+		require.NotNil(t, err)
+		require.Empty(t, result)
+		fail, ok := err.(*exception.Exception)
+		require.True(t, ok)
+		require.Equal(t, exception.TypeNotFound, fail.Type)
+	})
+}
+
 func TestAddFavoriteArticleOK(t *testing.T) {
 	author, authorAuth, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)

@@ -28,6 +28,27 @@ func (r *articleRepo) CreateArticle(ctx context.Context, arg port.CreateArticleP
 	return article, nil
 }
 
+func (r *articleRepo) UpdateArticle(ctx context.Context, arg port.UpdateArticlePayload) (domain.Article, error) {
+	article := arg.Article
+	if article.Title != "" {
+		article.SetTitle(article.Title)
+	}
+
+	// update
+	_, err := r.db.NewUpdate().Model(&article).OmitZero().Where("id = ?", article.ID).Exec(ctx)
+	if err != nil {
+		return domain.Article{}, intoException(err)
+	}
+
+	// find updated
+	updated, err := r.FindOneArticle(ctx, port.FilterArticlePayload{IDs: []domain.ID{article.ID}})
+	if err != nil {
+		return domain.Article{}, intoException(err)
+	}
+
+	return updated, err
+}
+
 func (r *articleRepo) FilterArticle(ctx context.Context, filter port.FilterArticlePayload) ([]domain.Article, error) {
 	articles := []domain.Article{}
 	query := r.db.NewSelect().Model(&articles)

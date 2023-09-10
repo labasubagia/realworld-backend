@@ -81,6 +81,47 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 	return result, nil
 }
 
+func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParams) (port.UpdateArticleResult, error) {
+	if arg.AuthArg.Payload == nil {
+		return port.UpdateArticleResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+	}
+
+	current, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
+		Slugs:     []string{arg.Slug},
+		AuthorIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+	})
+	if err != nil {
+		return port.UpdateArticleResult{}, exception.Into(err)
+	}
+
+	current.Title = arg.Article.Title
+	current.Description = arg.Article.Description
+	current.Body = arg.Article.Body
+
+	updated, err := s.property.repo.Article().UpdateArticle(ctx, port.UpdateArticlePayload{Article: current})
+	if err != nil {
+		return port.UpdateArticleResult{}, exception.Into(err)
+	}
+
+	// Get decorated article
+	articleInfos, err := s.infoArticles(ctx, GetListArticleInfoParams{
+		authArg:  arg.AuthArg,
+		articles: []domain.Article{updated},
+	})
+	if err != nil {
+		return port.UpdateArticleResult{}, exception.Into(err)
+	}
+	if len(articleInfos.Articles) == 0 {
+		return port.UpdateArticleResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	}
+
+	result := port.UpdateArticleResult{
+		Article: articleInfos.Articles[0],
+	}
+
+	return result, nil
+}
+
 func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoriteParams) (result port.AddFavoriteResult, err error) {
 	if arg.AuthArg.Payload == nil {
 		return port.AddFavoriteResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
