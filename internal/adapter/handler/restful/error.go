@@ -8,6 +8,10 @@ import (
 )
 
 func errorHandler(c *gin.Context, err error) {
+	if err == nil {
+		c.JSON(http.StatusOK, nil)
+		return
+	}
 	fail, ok := err.(*exception.Exception)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, fail)
