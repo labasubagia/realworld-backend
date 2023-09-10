@@ -13,6 +13,9 @@ var mapException = map[string]string{
 }
 
 func postgresErrCode(err error) string {
+	if err == nil {
+		return ""
+	}
 	pgErr, ok := err.(*pgconn.PgError)
 	if ok {
 		return pgErr.Code
