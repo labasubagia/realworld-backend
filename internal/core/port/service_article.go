@@ -109,4 +109,6 @@ type ArticleService interface {
 
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
 	RemoveFavorite(context.Context, RemoveFavoriteParams) (RemoveFavoriteResult, error)
+
+	ListTags(context.Context) ([]string, error)
 }

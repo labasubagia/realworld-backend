@@ -561,3 +561,12 @@ func (server *Server) RemoveFavoriteArticle(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (server *Server) ListTags(c *gin.Context) {
+	tags, err := server.service.Article().ListTags(context.Background())
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"tags": tags})
+}

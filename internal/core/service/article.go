@@ -651,3 +651,15 @@ func (s *articleService) getCommentInfo(ctx context.Context, arg GetCommentInfo)
 
 	return arg.comments, nil
 }
+
+func (s *articleService) ListTags(ctx context.Context) ([]string, error) {
+	tags, err := s.property.repo.Article().FilterTags(ctx, port.FilterTagPayload{})
+	if err != nil {
+		return []string{}, exception.Into(err)
+	}
+	tagNames := []string{}
+	for _, tag := range tags {
+		tagNames = append(tagNames, tag.Name)
+	}
+	return tagNames, nil
+}

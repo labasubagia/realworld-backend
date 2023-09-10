@@ -105,6 +105,7 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagPaylo
 	if len(filter.Names) > 0 {
 		query = query.Where("name IN (?)", bun.In(filter.Names))
 	}
+	query = query.Order("name ASC")
 	err := query.Scan(ctx)
 	if err != nil {
 		return []domain.Tag{}, intoException(err)

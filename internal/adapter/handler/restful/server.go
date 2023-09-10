@@ -69,6 +69,9 @@ func (server *Server) setupRouter() {
 	favoriteArticleRouter.POST("/", server.AddFavoriteArticle)
 	favoriteArticleRouter.DELETE("/", server.RemoveFavoriteArticle)
 
+	tagRouter := router.Group("/tags")
+	tagRouter.GET("/", server.ListTags)
+
 	server.router = router
 }
 
