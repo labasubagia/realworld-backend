@@ -164,6 +164,41 @@ func TestUpdateArticle(t *testing.T) {
 	})
 }
 
+func TestDeleteArticle(t *testing.T) {
+	author, authorAuth, _ := createRandomUser(t)
+	article := createRandomArticle(t, author, authorAuth)
+	ctx := context.Background()
+
+	// other user try to delete fail
+	_, otherUserAuth, _ := createRandomUser(t)
+	err := testService.Article().Delete(ctx, port.DeleteArticleParams{
+		AuthArg: otherUserAuth,
+		Slug:    article.Article.Slug,
+	})
+	require.NotNil(t, err)
+	fail, ok := err.(*exception.Exception)
+	require.True(t, ok)
+	require.Equal(t, exception.TypeNotFound, fail.Type)
+
+	// delete ok
+	err = testService.Article().Delete(ctx, port.DeleteArticleParams{
+		AuthArg: authorAuth,
+		Slug:    article.Article.Slug,
+	})
+	require.Nil(t, err)
+
+	// not found
+	getResult, err := testService.Article().Get(ctx, port.GetArticleParams{
+		AuthArg: authorAuth,
+		Slug:    article.Article.Slug,
+	})
+	require.NotNil(t, err)
+	require.Empty(t, getResult)
+	fail, ok = err.(*exception.Exception)
+	require.True(t, ok)
+	require.Equal(t, exception.TypeNotFound, fail.Type)
+}
+
 func TestAddFavoriteArticleOK(t *testing.T) {
 	author, authorAuth, _ := createRandomUser(t)
 	reader, readerAuth, _ := createRandomUser(t)

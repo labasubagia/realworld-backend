@@ -14,6 +14,10 @@ type UpdateArticlePayload struct {
 	Article domain.Article
 }
 
+type DeleteArticlePayload struct {
+	Article domain.Article
+}
+
 type FilterArticlePayload struct {
 	Slugs     []string
 	IDs       []domain.ID
@@ -49,6 +53,7 @@ type FilterFavoritePayload struct {
 type ArticleRepository interface {
 	CreateArticle(context.Context, CreateArticlePayload) (domain.Article, error)
 	UpdateArticle(context.Context, UpdateArticlePayload) (domain.Article, error)
+	DeleteArticle(context.Context, DeleteArticlePayload) error
 	FilterArticle(context.Context, FilterArticlePayload) ([]domain.Article, error)
 	FindOneArticle(context.Context, FilterArticlePayload) (domain.Article, error)
 

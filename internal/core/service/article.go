@@ -122,6 +122,28 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 	return result, nil
 }
 
+func (s *articleService) Delete(ctx context.Context, arg port.DeleteArticleParams) error {
+	if arg.AuthArg.Payload == nil {
+		return exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+	}
+
+	current, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
+		Slugs:     []string{arg.Slug},
+		AuthorIDs: []domain.ID{arg.AuthArg.Payload.UserID},
+	})
+	if err != nil {
+		return exception.Into(err)
+	}
+
+	err = s.property.repo.Article().DeleteArticle(ctx, port.DeleteArticlePayload{
+		Article: current,
+	})
+	if err != nil {
+		return exception.Into(err)
+	}
+	return nil
+}
+
 func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoriteParams) (result port.AddFavoriteResult, err error) {
 	if arg.AuthArg.Payload == nil {
 		return port.AddFavoriteResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)

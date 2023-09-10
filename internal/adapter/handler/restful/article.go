@@ -321,3 +321,23 @@ func (server *Server) UpdateArticle(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (server *Server) DeleteArticle(c *gin.Context) {
+	slug := c.Param("slug")
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	err = server.service.Article().Delete(context.Background(), port.DeleteArticleParams{
+		AuthArg: authArg,
+		Slug:    slug,
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
+}

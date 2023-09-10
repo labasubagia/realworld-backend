@@ -27,6 +27,11 @@ type UpdateArticleResult struct {
 	Article domain.Article
 }
 
+type DeleteArticleParams struct {
+	AuthArg AuthParams
+	Slug    string
+}
+
 type ListArticleParams struct {
 	AuthArg        AuthParams
 	IDs            []domain.ID
@@ -64,6 +69,7 @@ type GetArticleResult struct {
 type ArticleService interface {
 	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
 	Update(context.Context, UpdateArticleParams) (UpdateArticleResult, error)
+	Delete(context.Context, DeleteArticleParams) error
 	List(context.Context, ListArticleParams) (ListArticleResult, error)
 	Feed(context.Context, ListArticleParams) (ListArticleResult, error)
 	Get(context.Context, GetArticleParams) (GetArticleResult, error)

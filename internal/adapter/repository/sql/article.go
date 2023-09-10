@@ -49,6 +49,18 @@ func (r *articleRepo) UpdateArticle(ctx context.Context, arg port.UpdateArticleP
 	return updated, err
 }
 
+func (r *articleRepo) DeleteArticle(ctx context.Context, arg port.DeleteArticlePayload) error {
+	_, err := r.db.NewDelete().
+		Model(&arg.Article).
+		Where("id = ?", arg.Article.ID).
+		Where("slug = ?", arg.Article.Slug).
+		Exec(ctx)
+	if err != nil {
+		return intoException(err)
+	}
+	return nil
+}
+
 func (r *articleRepo) FilterArticle(ctx context.Context, filter port.FilterArticlePayload) ([]domain.Article, error) {
 	articles := []domain.Article{}
 	query := r.db.NewSelect().Model(&articles)

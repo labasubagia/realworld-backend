@@ -58,6 +58,7 @@ func (server *Server) setupRouter() {
 	articleRouter.GET("/:slug", server.GetArticle)
 	articleRouter.POST("/", server.CreateArticle)
 	articleRouter.PUT("/:slug", server.UpdateArticle)
+	articleRouter.DELETE("/:slug", server.DeleteArticle)
 
 	server.router = router
 }
