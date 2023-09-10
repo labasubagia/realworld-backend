@@ -47,6 +47,7 @@ jobs:
 
       - name: E2E
         run: |
+          npm i -g newman
           APIURL=http://0.0.0.0:5000 ./tests/run-api-tests.sh
 
     
