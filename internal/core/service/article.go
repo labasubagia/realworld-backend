@@ -462,3 +462,119 @@ func (s *articleService) infoArticles(ctx context.Context, arg GetListArticleInf
 	}
 	return result, nil
 }
+
+func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentParams) (result port.AddCommentResult, err error) {
+
+	if arg.AuthArg.Payload == nil {
+		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+	}
+
+	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
+		Slugs: []string{arg.Slug},
+	})
+	if err != nil {
+		return port.AddCommentResult{}, exception.Into(err)
+	}
+
+	comment, err := s.property.repo.Article().AddComment(ctx, domain.Comment{
+		ArticleID: article.ID,
+		AuthorID:  arg.AuthArg.Payload.UserID,
+		Body:      arg.Comment.Body,
+	})
+	if err != nil {
+		return port.AddCommentResult{}, exception.Into(err)
+	}
+
+	// Get decorator info
+	comments, err := s.getCommentInfo(ctx, GetCommentInfo{
+		authArg:  arg.AuthArg,
+		comments: []domain.Comment{comment},
+	})
+	if err != nil {
+		return port.AddCommentResult{}, exception.Into(err)
+	}
+	if len(comments) == 0 {
+		return port.AddCommentResult{}, exception.New(exception.TypeNotFound, "comment not found", nil)
+	}
+
+	return port.AddCommentResult{Comment: comments[0]}, nil
+}
+
+func (s *articleService) ListComments(ctx context.Context, arg port.ListCommentParams) (result port.ListCommentResult, err error) {
+
+	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
+		Slugs: []string{arg.Slug},
+	})
+	if err != nil {
+		return port.ListCommentResult{}, exception.Into(err)
+	}
+
+	comments, err := s.property.repo.Article().FilterComment(ctx, port.FilterCommentPayload{
+		ArticleIDs: []domain.ID{article.ID},
+	})
+	if err != nil {
+		return port.ListCommentResult{}, exception.Into(err)
+	}
+
+	// Get decorator info
+	result.Comments, err = s.getCommentInfo(ctx, GetCommentInfo{
+		authArg:  arg.AuthArg,
+		comments: comments,
+	})
+	if err != nil {
+		return port.ListCommentResult{}, exception.Into(err)
+	}
+
+	return result, nil
+}
+
+type GetCommentInfo struct {
+	authArg  port.AuthParams
+	comments []domain.Comment
+}
+
+func (s *articleService) getCommentInfo(ctx context.Context, arg GetCommentInfo) ([]domain.Comment, error) {
+
+	// Get article id and author id
+	authorIDs := []domain.ID{}
+	for _, article := range arg.comments {
+		authorIDs = append(authorIDs, article.AuthorID)
+	}
+
+	// Get article authors
+	authors, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{
+		IDs: authorIDs,
+	})
+	if err != nil {
+		return []domain.Comment{}, exception.Into(err)
+	}
+	authorMap := map[domain.ID]domain.User{}
+	for _, author := range authors {
+		authorMap[author.ID] = author
+	}
+
+	// Logged user check if followed author
+	loggedUserFollowedAuthorMap := map[domain.ID]bool{}
+	if arg.authArg.Payload != nil {
+		followed, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
+			FollowerIDs: []domain.ID{arg.authArg.Payload.UserID},
+			FolloweeIDs: authorIDs,
+		})
+		if err != nil {
+			return []domain.Comment{}, exception.Into(err)
+		}
+		for _, follow := range followed {
+			loggedUserFollowedAuthorMap[follow.FolloweeID] = true
+		}
+	}
+
+	for index, comment := range arg.comments {
+		if author, ok := authorMap[comment.AuthorID]; ok {
+			author.IsFollowed = loggedUserFollowedAuthorMap[comment.AuthorID]
+			comment.Author = author
+			arg.comments[index] = comment
+		}
+	}
+
+	return arg.comments, nil
+}

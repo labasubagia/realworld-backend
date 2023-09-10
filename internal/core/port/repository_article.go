@@ -50,6 +50,11 @@ type FilterFavoritePayload struct {
 	ArticleIDs []domain.ID
 }
 
+type FilterCommentPayload struct {
+	ArticleIDs []domain.ID
+	AuthorIDs  []domain.ID
+}
+
 type ArticleRepository interface {
 	CreateArticle(context.Context, CreateArticlePayload) (domain.Article, error)
 	UpdateArticle(context.Context, UpdateArticlePayload) (domain.Article, error)
@@ -66,4 +71,7 @@ type ArticleRepository interface {
 	AddFavorite(context.Context, domain.ArticleFavorite) (domain.ArticleFavorite, error)
 	FilterFavorite(context.Context, FilterFavoritePayload) ([]domain.ArticleFavorite, error)
 	FilterFavoriteCount(context.Context, FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error)
+
+	AddComment(context.Context, domain.Comment) (domain.Comment, error)
+	FilterComment(context.Context, FilterCommentPayload) ([]domain.Comment, error)
 }

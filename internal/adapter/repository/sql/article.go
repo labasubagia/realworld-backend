@@ -218,3 +218,28 @@ func (r *articleRepo) FilterFavoriteCount(ctx context.Context, filter port.Filte
 	}
 	return counts, nil
 }
+
+func (r *articleRepo) AddComment(ctx context.Context, arg domain.Comment) (domain.Comment, error) {
+	comment := arg
+	_, err := r.db.NewInsert().Model(&comment).Exec(ctx)
+	if err != nil {
+		return domain.Comment{}, intoException(err)
+	}
+	return comment, nil
+}
+
+func (r *articleRepo) FilterComment(ctx context.Context, arg port.FilterCommentPayload) ([]domain.Comment, error) {
+	comments := []domain.Comment{}
+	query := r.db.NewSelect().Model(&comments)
+	if len(arg.ArticleIDs) > 0 {
+		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
+	}
+	if len(arg.AuthorIDs) > 0 {
+		query = query.Where("author_id IN (?)", bun.In(arg.AuthorIDs))
+	}
+	err := query.Scan(ctx)
+	if err != nil {
+		return []domain.Comment{}, intoException(err)
+	}
+	return comments, nil
+}

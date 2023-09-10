@@ -341,3 +341,99 @@ func (server *Server) DeleteArticle(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
+
+type Comment struct {
+	ID        int64   `json:"id"`
+	CreatedAt string  `json:"createdAt"`
+	UpdatedAt string  `json:"updatedAt"`
+	Body      string  `json:"body"`
+	Author    Profile `json:"author"`
+}
+
+type AddCommentRequest struct {
+	Comment Comment `json:"comment"`
+}
+
+type AddCommentResponse struct {
+	Comment Comment `json:"comment"`
+}
+
+func (server *Server) AddComment(c *gin.Context) {
+	slug := c.Param("slug")
+	authArg, err := getAuthArg(c)
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	var req AddCommentRequest
+	if err := c.BindJSON(&req); err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	result, err := server.service.Article().AddComment(context.Background(), port.AddCommentParams{
+		AuthArg: authArg,
+		Slug:    slug,
+		Comment: domain.Comment{
+			Body: req.Comment.Body,
+		},
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	res := AddCommentResponse{
+		Comment: Comment{
+			ID:        int64(result.Comment.ID),
+			CreatedAt: result.Comment.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt: result.Comment.UpdatedAt.UTC().Format(formatTime),
+			Body:      result.Comment.Body,
+			Author: Profile{
+				Username:  result.Comment.Author.Username,
+				Bio:       result.Comment.Author.Bio,
+				Image:     result.Comment.Author.Image,
+				Following: result.Comment.Author.IsFollowed,
+			},
+		},
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+type ListCommentResponse struct {
+	Comments []Comment `json:"comments"`
+}
+
+func (server *Server) ListComments(c *gin.Context) {
+	slug := c.Param("slug")
+	authArg, _ := getAuthArg(c)
+
+	result, err := server.service.Article().ListComments(context.Background(), port.ListCommentParams{
+		AuthArg: authArg,
+		Slug:    slug,
+	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
+
+	res := ListCommentResponse{
+		Comments: []Comment{},
+	}
+	for _, comment := range result.Comments {
+		res.Comments = append(res.Comments, Comment{
+			ID:        int64(comment.ID),
+			CreatedAt: comment.CreatedAt.UTC().Format(formatTime),
+			UpdatedAt: comment.UpdatedAt.UTC().Format(formatTime),
+			Body:      comment.Body,
+			Author: Profile{
+				Username:  comment.Author.Username,
+				Bio:       comment.Author.Bio,
+				Image:     comment.Author.Image,
+				Following: comment.Author.IsFollowed,
+			},
+		})
+	}
+	c.JSON(http.StatusOK, res)
+}

@@ -394,6 +394,47 @@ func TestGetArticle(t *testing.T) {
 	require.Equal(t, article.Article.Body, result.Article.Body)
 }
 
+func TestCreateComment(t *testing.T) {
+	author, authorAuth, _ := createRandomUser(t)
+	_, user1Auth, _ := createRandomUser(t)
+	_, user2Auth, _ := createRandomUser(t)
+
+	article := createRandomArticle(t, author, authorAuth)
+	ctx := context.Background()
+
+	// user1
+	arg1 := port.AddCommentParams{
+		AuthArg: user1Auth,
+		Slug:    article.Article.Slug,
+		Comment: domain.Comment{Body: util.RandomString(10)},
+	}
+	result, err := testService.Article().AddComment(ctx, arg1)
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, arg1.Comment.Body, result.Comment.Body)
+	require.Equal(t, article.Article.ID, result.Comment.ArticleID)
+
+	// user2
+	arg2 := port.AddCommentParams{
+		AuthArg: user2Auth,
+		Slug:    article.Article.Slug,
+		Comment: domain.Comment{Body: util.RandomString(10)},
+	}
+	result, err = testService.Article().AddComment(ctx, arg2)
+	require.Nil(t, err)
+	require.NotEmpty(t, result)
+	require.Equal(t, arg2.Comment.Body, result.Comment.Body)
+	require.Equal(t, article.Article.ID, result.Comment.ArticleID)
+
+	// get
+	getResult, err := testService.Article().ListComments(ctx, port.ListCommentParams{
+		AuthArg: authorAuth,
+		Slug:    article.Article.Slug,
+	})
+	require.Nil(t, err)
+	require.Len(t, getResult.Comments, 2)
+}
+
 func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) port.CreateArticleTxResult {
 	return createArticle(t, createArticleArg(author, authArg))
 }

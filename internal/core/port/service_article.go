@@ -66,6 +66,25 @@ type GetArticleResult struct {
 	Article domain.Article
 }
 
+type AddCommentParams struct {
+	AuthArg AuthParams
+	Slug    string
+	Comment domain.Comment
+}
+
+type AddCommentResult struct {
+	Comment domain.Comment
+}
+
+type ListCommentParams struct {
+	AuthArg AuthParams
+	Slug    string
+}
+
+type ListCommentResult struct {
+	Comments []domain.Comment
+}
+
 type ArticleService interface {
 	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
 	Update(context.Context, UpdateArticleParams) (UpdateArticleResult, error)
@@ -73,5 +92,9 @@ type ArticleService interface {
 	List(context.Context, ListArticleParams) (ListArticleResult, error)
 	Feed(context.Context, ListArticleParams) (ListArticleResult, error)
 	Get(context.Context, GetArticleParams) (GetArticleResult, error)
+
+	AddComment(context.Context, AddCommentParams) (AddCommentResult, error)
+	ListComments(context.Context, ListCommentParams) (ListCommentResult, error)
+
 	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
 }
