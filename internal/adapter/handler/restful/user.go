@@ -234,6 +234,10 @@ func (server *Server) FollowUser(c *gin.Context) {
 		Username: username,
 		AuthArg:  authArg,
 	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
 	res := FollowUserResult{
 		Profile: Profile{
 			Username:  result.User.Username,
@@ -256,6 +260,10 @@ func (server *Server) UnFollowUser(c *gin.Context) {
 		Username: username,
 		AuthArg:  authArg,
 	})
+	if err != nil {
+		errorHandler(c, err)
+		return
+	}
 	res := UnFollowUserResult{
 		Profile: Profile{
 			Username:  result.User.Username,

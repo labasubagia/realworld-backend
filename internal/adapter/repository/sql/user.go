@@ -83,8 +83,8 @@ func (r *userRepo) FindOne(ctx context.Context, filter port.FilterUserPayload) (
 	if err != nil {
 		return domain.User{}, intoException(err)
 	}
-	if len(users) < 1 {
-		return domain.User{}, exception.New(exception.TypeNotFound, "not found", nil)
+	if len(users) == 0 {
+		return domain.User{}, exception.New(exception.TypeNotFound, "user not found", nil)
 	}
 	return users[0], nil
 }
