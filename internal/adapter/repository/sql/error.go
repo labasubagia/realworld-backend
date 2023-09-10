@@ -21,6 +21,9 @@ func postgresErrCode(err error) string {
 }
 
 func intoException(err error) *exception.Exception {
+	if err == nil {
+		return nil
+	}
 	if err == pgx.ErrNoRows {
 		return exception.New(exception.TypeNotFound, err.Error(), err)
 	}

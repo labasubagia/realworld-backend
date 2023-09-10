@@ -41,6 +41,9 @@ func (e *Exception) AddError(key, msg string) *Exception {
 }
 
 func Into(err error) *Exception {
+	if err == nil {
+		return nil
+	}
 	fail, ok := err.(*Exception)
 	if ok {
 		return fail
