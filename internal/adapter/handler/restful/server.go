@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
@@ -34,6 +35,8 @@ func NewServer(config util.Config, service port.Service) port.Server {
 func (server *Server) setupRouter() {
 
 	router := gin.Default()
+	router.Use(cors.Default())
+
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
 	})
