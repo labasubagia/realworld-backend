@@ -111,15 +111,11 @@ func TestFeedArticle(t *testing.T) {
 		createArticle(t, arg)
 	}
 
-	// follow author
-	followResult, err := testService.User().Follow(ctx, port.ProfileParams{
-		AuthArg:  reader1Auth,
-		Username: author.Username,
-	})
-	require.Nil(t, err)
-	require.NotEmpty(t, followResult)
-
 	t.Run("Feed", func(t *testing.T) {
+		followResult, err := testService.User().Follow(ctx, port.ProfileParams{AuthArg: reader1Auth, Username: author.Username})
+		require.Nil(t, err)
+		require.NotEmpty(t, followResult)
+
 		result, err := testService.Article().Feed(ctx, port.ListArticleParams{AuthArg: reader1Auth})
 		require.Nil(t, err)
 		require.NotEmpty(t, result)
