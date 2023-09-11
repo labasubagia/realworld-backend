@@ -244,7 +244,6 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		}
 
 		// ? DISABLE [error newman test]
-		// ? this just some case
 		// if len(authors) == 0 {
 		// 	authorNames := strings.Join(arg.AuthorNames, ", ")
 		// 	msg := fmt.Sprintf("author %s does not exists", authorNames)
@@ -265,11 +264,14 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		if err != nil {
 			return []domain.Article{}, exception.Into(err)
 		}
-		if len(tags) == 0 {
-			tagNames := strings.Join(arg.Tags, ", ")
-			msg := fmt.Sprintf("tag %s does not exists", tagNames)
-			return []domain.Article{}, exception.Validation().AddError("tag", msg)
-		}
+
+		// ? DISABLE [error newman test]
+		// if len(tags) == 0 {
+		// 	tagNames := strings.Join(arg.Tags, ", ")
+		// 	msg := fmt.Sprintf("tag %s does not exists", tagNames)
+		// 	return []domain.Article{}, exception.Validation().AddError("tag", msg)
+		// }
+
 		tagIDs := []domain.ID{}
 		for _, tag := range tags {
 			tagIDs = append(tagIDs, tag.ID)
@@ -512,11 +514,11 @@ func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentPara
 		return domain.Comment{}, exception.Into(err)
 	}
 
-	comment, err := s.property.repo.Article().AddComment(ctx, domain.Comment{
+	comment, err := s.property.repo.Article().AddComment(ctx, domain.NewComment(domain.Comment{
 		ArticleID: article.ID,
 		AuthorID:  arg.AuthArg.Payload.UserID,
 		Body:      arg.Comment.Body,
-	})
+	}))
 	if err != nil {
 		return domain.Comment{}, exception.Into(err)
 	}

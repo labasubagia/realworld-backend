@@ -11,6 +11,7 @@
         "mapstructure",
         "notnull",
         "nullzero",
+        "oklog",
         "pgconn",
         "pgdialect",
         "pgxpool",

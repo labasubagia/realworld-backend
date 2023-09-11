@@ -30,6 +30,7 @@ func (article *Article) SetTitle(value string) {
 func NewArticle(arg Article) Article {
 	now := time.Now()
 	article := Article{
+		ID:          NewID(),
 		AuthorID:    arg.AuthorID,
 		Title:       arg.Title,
 		Description: arg.Description,
@@ -56,6 +57,13 @@ type Tag struct {
 	Name string
 }
 
+func NewTag(arg Tag) Tag {
+	return Tag{
+		ID:   NewID(),
+		Name: arg.Name,
+	}
+}
+
 type ArticleTag struct {
 	ArticleID ID
 	TagID     ID
@@ -69,6 +77,17 @@ type Comment struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Author    User
+}
+
+func NewComment(arg Comment) Comment {
+	return Comment{
+		ID:        NewID(),
+		ArticleID: arg.ArticleID,
+		AuthorID:  arg.AuthorID,
+		Body:      arg.Body,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
 type ArticleFavorite struct {

@@ -9,7 +9,7 @@ import (
 
 type Article struct {
 	bun.BaseModel `bun:"table:articles,alias:a"`
-	ID            domain.ID `bun:"id,pk,autoincrement"`
+	ID            domain.ID `bun:"id,pk"`
 	AuthorID      domain.ID `bun:"author_id,notnull"`
 	Title         string    `bun:"title,notnull"`
 	Slug          string    `bun:"slug,notnull"`
@@ -47,7 +47,7 @@ func AsArticle(arg domain.Article) Article {
 
 type Tag struct {
 	bun.BaseModel `bun:"table:tags,alias:t"`
-	ID            domain.ID `bun:"id,pk,autoincrement"`
+	ID            domain.ID `bun:"id,pk"`
 	Name          string    `bun:"name,notnull"`
 }
 
@@ -87,7 +87,7 @@ func AsArticleTag(arg domain.ArticleTag) ArticleTag {
 
 type Comment struct {
 	bun.BaseModel `bun:"table:comments,alias:c"`
-	ID            domain.ID `bun:"id,pk,autoincrement"`
+	ID            domain.ID `bun:"id,pk"`
 	ArticleID     domain.ID `bun:"article_id,notnull"`
 	AuthorID      domain.ID `bun:"author_id,notnull"`
 	Body          string    `bun:"body,notnull"`

@@ -58,7 +58,7 @@ func (user *User) SetImageURL(url string) error {
 func NewUser(arg User) (User, error) {
 	validator := exception.Validation()
 
-	user := User{}
+	user := User{ID: NewID()}
 	if err := user.SetEmail(arg.Email); err != nil {
 		validator.AddError("email", err.Error())
 	}

@@ -3,7 +3,6 @@ package restful
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
@@ -263,7 +262,7 @@ func (server *Server) ListComments(c *gin.Context) {
 
 func (server *Server) DeleteComment(c *gin.Context) {
 	slug := c.Param("slug")
-	commentID, err := strconv.Atoi(c.Param("comment_id"))
+	commentID, err := domain.ParseID(c.Param("comment_id"))
 	if err != nil {
 		err = exception.Validation().AddError("comment_id", "should valid id")
 		errorHandler(c, err)

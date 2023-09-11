@@ -1,5 +1,5 @@
 CREATE TABLE "users" (
-    "id" serial PRIMARY KEY,
+    "id" char(26) PRIMARY KEY,
     "email" varchar NOT NULL UNiQUE,
     "username" varchar NOT NULL UNiQUE,
     "password" varchar NOT NULL,
@@ -11,8 +11,8 @@ CREATE TABLE "users" (
 
 --bun:split
 CREATE TABLE "user_follows" (
-    "follower_id" INTEGER NOT NULL,
-    "followee_id" INTEGER NOT NULL,
+    "follower_id" char(26) NOT NULL,
+    "followee_id" char(26) NOT NULL,
     PRIMARY KEY ("follower_id", "followee_id"),
     FOREIGN KEY ("follower_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY ("followee_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE

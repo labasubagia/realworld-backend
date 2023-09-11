@@ -143,7 +143,8 @@ func (r *articleRepo) AddTags(ctx context.Context, arg port.AddTagsPayload) ([]d
 		if _, exist := existMap[tag]; exist {
 			continue
 		}
-		newTags = append(newTags, model.Tag{Name: tag})
+		newTag := domain.NewTag(domain.Tag{Name: tag})
+		newTags = append(newTags, model.AsTag(newTag))
 	}
 	if len(newTags) > 0 {
 		_, err = r.db.NewInsert().Model(&newTags).Returning("*").Exec(ctx)
