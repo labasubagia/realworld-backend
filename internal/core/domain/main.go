@@ -17,7 +17,7 @@ func RandomID() ID {
 func ParseID(value string) (ID, error) {
 	id, err := ulid.Parse(value)
 	if err != nil {
-		return ID(id.String()), nil
+		return ID(ulid.ULID{}.String()), err
 	}
-	return ID(ulid.ULID{}.String()), err
+	return ID(id.String()), nil
 }
