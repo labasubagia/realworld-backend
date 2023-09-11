@@ -6,18 +6,6 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 )
 
-type CreateArticlePayload struct {
-	Article domain.Article
-}
-
-type UpdateArticlePayload struct {
-	Article domain.Article
-}
-
-type DeleteArticlePayload struct {
-	Article domain.Article
-}
-
 type FilterArticlePayload struct {
 	Slugs     []string
 	IDs       []domain.ID
@@ -55,14 +43,10 @@ type FilterCommentPayload struct {
 	AuthorIDs  []domain.ID
 }
 
-type DeleteCommentPayload struct {
-	Comment domain.Comment
-}
-
 type ArticleRepository interface {
-	CreateArticle(context.Context, CreateArticlePayload) (domain.Article, error)
-	UpdateArticle(context.Context, UpdateArticlePayload) (domain.Article, error)
-	DeleteArticle(context.Context, DeleteArticlePayload) error
+	CreateArticle(context.Context, domain.Article) (domain.Article, error)
+	UpdateArticle(context.Context, domain.Article) (domain.Article, error)
+	DeleteArticle(context.Context, domain.Article) error
 	FilterArticle(context.Context, FilterArticlePayload) ([]domain.Article, error)
 	FindOneArticle(context.Context, FilterArticlePayload) (domain.Article, error)
 
@@ -78,6 +62,6 @@ type ArticleRepository interface {
 	FilterFavoriteCount(context.Context, FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error)
 
 	AddComment(context.Context, domain.Comment) (domain.Comment, error)
+	DeleteComment(context.Context, domain.Comment) error
 	FilterComment(context.Context, FilterCommentPayload) ([]domain.Comment, error)
-	DeleteComment(context.Context, DeleteCommentPayload) error
 }

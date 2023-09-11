@@ -32,7 +32,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		newArticle := domain.NewArticle(arg.Article)
 
 		// create article
-		article, err = r.Article().CreateArticle(ctx, port.CreateArticlePayload{Article: newArticle})
+		article, err = r.Article().CreateArticle(ctx, newArticle)
 		if err != nil {
 			return exception.Into(err)
 		}
@@ -99,7 +99,7 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 	current.Description = arg.Article.Description
 	current.Body = arg.Article.Body
 
-	updated, err := s.property.repo.Article().UpdateArticle(ctx, port.UpdateArticlePayload{Article: current})
+	updated, err := s.property.repo.Article().UpdateArticle(ctx, current)
 	if err != nil {
 		return domain.Article{}, exception.Into(err)
 	}
@@ -132,9 +132,7 @@ func (s *articleService) Delete(ctx context.Context, arg port.DeleteArticleParam
 		return exception.Into(err)
 	}
 
-	err = s.property.repo.Article().DeleteArticle(ctx, port.DeleteArticlePayload{
-		Article: current,
-	})
+	err = s.property.repo.Article().DeleteArticle(ctx, current)
 	if err != nil {
 		return exception.Into(err)
 	}
@@ -578,12 +576,10 @@ func (s *articleService) DeleteComment(ctx context.Context, arg port.DeleteComme
 		return exception.Into(err)
 	}
 
-	err = s.property.repo.Article().DeleteComment(ctx, port.DeleteCommentPayload{
-		Comment: domain.Comment{
-			ArticleID: article.ID,
-			AuthorID:  arg.AuthArg.Payload.UserID,
-			ID:        arg.CommentID,
-		},
+	err = s.property.repo.Article().DeleteComment(ctx, domain.Comment{
+		ArticleID: article.ID,
+		AuthorID:  arg.AuthArg.Payload.UserID,
+		ID:        arg.CommentID,
 	})
 	if err != nil {
 		return exception.Into(err)

@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 
+	"github.com/labasubagia/realworld-backend/internal/adapter/repository/sql/model"
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
@@ -19,20 +20,20 @@ func NewArticleRepository(db bun.IDB) port.ArticleRepository {
 	}
 }
 
-func (r *articleRepo) CreateArticle(ctx context.Context, arg port.CreateArticlePayload) (domain.Article, error) {
-	article := arg.Article
+func (r *articleRepo) CreateArticle(ctx context.Context, arg domain.Article) (domain.Article, error) {
+	article := model.AsArticle(arg)
 	_, err := r.db.NewInsert().Model(&article).Exec(ctx)
 	if err != nil {
 		return domain.Article{}, intoException(err)
 	}
-	return article, nil
+	return article.ToDomain(), nil
 }
 
-func (r *articleRepo) UpdateArticle(ctx context.Context, arg port.UpdateArticlePayload) (domain.Article, error) {
-	article := arg.Article
-	if article.Title != "" {
-		article.SetTitle(article.Title)
+func (r *articleRepo) UpdateArticle(ctx context.Context, arg domain.Article) (domain.Article, error) {
+	if arg.Title != "" {
+		arg.SetTitle(arg.Title)
 	}
+	article := model.AsArticle(arg)
 
 	// update
 	_, err := r.db.NewUpdate().Model(&article).OmitZero().Where("id = ?", article.ID).Exec(ctx)
@@ -49,11 +50,12 @@ func (r *articleRepo) UpdateArticle(ctx context.Context, arg port.UpdateArticleP
 	return updated, err
 }
 
-func (r *articleRepo) DeleteArticle(ctx context.Context, arg port.DeleteArticlePayload) error {
+func (r *articleRepo) DeleteArticle(ctx context.Context, arg domain.Article) error {
+	article := model.AsArticle(arg)
 	_, err := r.db.NewDelete().
-		Model(&arg.Article).
-		Where("id = ?", arg.Article.ID).
-		Where("slug = ?", arg.Article.Slug).
+		Model(&article).
+		Where("id = ?", article.ID).
+		Where("slug = ?", article.Slug).
 		Exec(ctx)
 	if err != nil {
 		return intoException(err)
@@ -62,7 +64,7 @@ func (r *articleRepo) DeleteArticle(ctx context.Context, arg port.DeleteArticleP
 }
 
 func (r *articleRepo) FilterArticle(ctx context.Context, filter port.FilterArticlePayload) ([]domain.Article, error) {
-	articles := []domain.Article{}
+	articles := []model.Article{}
 	query := r.db.NewSelect().Model(&articles)
 	if len(filter.IDs) > 0 {
 		query = query.Where("id IN (?)", bun.In(filter.IDs))
@@ -82,7 +84,11 @@ func (r *articleRepo) FilterArticle(ctx context.Context, filter port.FilterArtic
 	if err != nil {
 		return []domain.Article{}, nil
 	}
-	return articles, nil
+	result := []domain.Article{}
+	for _, article := range articles {
+		result = append(result, article.ToDomain())
+	}
+	return result, nil
 }
 
 func (r *articleRepo) FindOneArticle(ctx context.Context, filter port.FilterArticlePayload) (domain.Article, error) {
@@ -90,15 +96,15 @@ func (r *articleRepo) FindOneArticle(ctx context.Context, filter port.FilterArti
 	if err != nil {
 		return domain.Article{}, intoException(err)
 	}
-	if len(articles) < 1 {
+	if len(articles) == 0 {
 		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
 	return articles[0], nil
 }
 
 func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagPayload) ([]domain.Tag, error) {
-	result := []domain.Tag{}
-	query := r.db.NewSelect().Model(&result)
+	tags := []model.Tag{}
+	query := r.db.NewSelect().Model(&tags)
 	if len(filter.IDs) > 0 {
 		query = query.Where("id IN (?)", bun.In(filter.IDs))
 	}
@@ -109,6 +115,11 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagPaylo
 	err := query.Scan(ctx)
 	if err != nil {
 		return []domain.Tag{}, intoException(err)
+	}
+
+	result := []domain.Tag{}
+	for _, tag := range tags {
+		result = append(result, tag.ToDomain())
 	}
 	return result, nil
 }
@@ -127,12 +138,12 @@ func (r *articleRepo) AddTags(ctx context.Context, arg port.AddTagsPayload) ([]d
 		existMap[tag.Name] = tag
 	}
 
-	newTags := []domain.Tag{}
+	newTags := []model.Tag{}
 	for _, tag := range arg.Tags {
 		if _, exist := existMap[tag]; exist {
 			continue
 		}
-		newTags = append(newTags, domain.Tag{Name: tag})
+		newTags = append(newTags, model.Tag{Name: tag})
 	}
 	if len(newTags) > 0 {
 		_, err = r.db.NewInsert().Model(&newTags).Returning("*").Exec(ctx)
@@ -141,8 +152,13 @@ func (r *articleRepo) AddTags(ctx context.Context, arg port.AddTagsPayload) ([]d
 		}
 	}
 
+	resultNewTags := []domain.Tag{}
+	for _, tag := range newTags {
+		resultNewTags = append(resultNewTags, tag.ToDomain())
+	}
+
 	// return existing and new tags
-	return append(existing, newTags...), nil
+	return append(existing, resultNewTags...), nil
 }
 
 func (r *articleRepo) AssignArticleTags(ctx context.Context, arg port.AssignTagPayload) ([]domain.ArticleTag, error) {
@@ -150,9 +166,9 @@ func (r *articleRepo) AssignArticleTags(ctx context.Context, arg port.AssignTagP
 		return []domain.ArticleTag{}, exception.Validation().AddError("tags", "empty")
 	}
 
-	articleTags := make([]domain.ArticleTag, len(arg.TagIDs))
+	articleTags := make([]model.ArticleTag, len(arg.TagIDs))
 	for i, tagID := range arg.TagIDs {
-		articleTags[i] = domain.ArticleTag{
+		articleTags[i] = model.ArticleTag{
 			ArticleID: arg.ArticleID,
 			TagID:     tagID,
 		}
@@ -162,11 +178,16 @@ func (r *articleRepo) AssignArticleTags(ctx context.Context, arg port.AssignTagP
 		return []domain.ArticleTag{}, intoException(err)
 	}
 
-	return articleTags, nil
+	result := []domain.ArticleTag{}
+	for _, tag := range articleTags {
+		result = append(result, tag.ToDomain())
+	}
+
+	return result, nil
 }
 
 func (r *articleRepo) FilterArticleTags(ctx context.Context, arg port.FilterArticleTagPayload) ([]domain.ArticleTag, error) {
-	articleTags := []domain.ArticleTag{}
+	articleTags := []model.ArticleTag{}
 	query := r.db.NewSelect().Model(&articleTags)
 	if len(arg.TagIDs) > 0 {
 		query = query.Where("tag_id IN (?)", bun.In(arg.TagIDs))
@@ -178,33 +199,38 @@ func (r *articleRepo) FilterArticleTags(ctx context.Context, arg port.FilterArti
 	if err != nil {
 		return []domain.ArticleTag{}, intoException(err)
 	}
-	return articleTags, nil
+
+	result := []domain.ArticleTag{}
+	for _, articleTag := range articleTags {
+		result = append(result, articleTag.ToDomain())
+	}
+	return result, nil
 }
 
 func (r *articleRepo) AddFavorite(ctx context.Context, arg domain.ArticleFavorite) (domain.ArticleFavorite, error) {
-	favorite := arg
+	favorite := model.AsArticleFavorite(arg)
 	_, err := r.db.NewInsert().Model(&favorite).Exec(ctx)
 	if err != nil {
 		return domain.ArticleFavorite{}, intoException(err)
 	}
-	return favorite, nil
+	return favorite.ToDomain(), nil
 }
 
 func (r *articleRepo) RemoveFavorite(ctx context.Context, arg domain.ArticleFavorite) (domain.ArticleFavorite, error) {
-	favorite := arg
+	favorite := model.AsArticleFavorite(arg)
 	_, err := r.db.NewDelete().
 		Model(&favorite).
-		Where("article_id = ?", arg.ArticleID).
-		Where("user_id = ?", arg.UserID).
+		Where("article_id = ?", favorite.ArticleID).
+		Where("user_id = ?", favorite.UserID).
 		Exec(ctx)
 	if err != nil {
 		return domain.ArticleFavorite{}, intoException(err)
 	}
-	return favorite, nil
+	return favorite.ToDomain(), nil
 }
 
 func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavoritePayload) ([]domain.ArticleFavorite, error) {
-	articleFavorites := []domain.ArticleFavorite{}
+	articleFavorites := []model.ArticleFavorite{}
 	query := r.db.NewSelect().Model(&articleFavorites)
 	if len(arg.UserIDs) > 0 {
 		query = query.Where("user_id IN (?)", bun.In(arg.UserIDs))
@@ -216,11 +242,16 @@ func (r *articleRepo) FilterFavorite(ctx context.Context, arg port.FilterFavorit
 	if err != nil {
 		return []domain.ArticleFavorite{}, intoException(err)
 	}
-	return articleFavorites, nil
+
+	result := []domain.ArticleFavorite{}
+	for _, articleFavorite := range articleFavorites {
+		result = append(result, articleFavorite.ToDomain())
+	}
+	return result, nil
 }
 
 func (r *articleRepo) FilterFavoriteCount(ctx context.Context, filter port.FilterFavoritePayload) ([]domain.ArticleFavoriteCount, error) {
-	counts := []domain.ArticleFavoriteCount{}
+	counts := []model.ArticleFavoriteCount{}
 	err := r.db.NewSelect().
 		Model(&counts).
 		Column("article_id").
@@ -230,20 +261,24 @@ func (r *articleRepo) FilterFavoriteCount(ctx context.Context, filter port.Filte
 	if err != nil {
 		return []domain.ArticleFavoriteCount{}, intoException(err)
 	}
-	return counts, nil
+	result := []domain.ArticleFavoriteCount{}
+	for _, count := range counts {
+		result = append(result, count.ToDomain())
+	}
+	return result, nil
 }
 
 func (r *articleRepo) AddComment(ctx context.Context, arg domain.Comment) (domain.Comment, error) {
-	comment := arg
+	comment := model.AsComment(arg)
 	_, err := r.db.NewInsert().Model(&comment).Exec(ctx)
 	if err != nil {
 		return domain.Comment{}, intoException(err)
 	}
-	return comment, nil
+	return comment.ToDomain(), nil
 }
 
 func (r *articleRepo) FilterComment(ctx context.Context, arg port.FilterCommentPayload) ([]domain.Comment, error) {
-	comments := []domain.Comment{}
+	comments := []model.Comment{}
 	query := r.db.NewSelect().Model(&comments)
 	if len(arg.ArticleIDs) > 0 {
 		query = query.Where("article_id IN (?)", bun.In(arg.ArticleIDs))
@@ -255,15 +290,20 @@ func (r *articleRepo) FilterComment(ctx context.Context, arg port.FilterCommentP
 	if err != nil {
 		return []domain.Comment{}, intoException(err)
 	}
-	return comments, nil
+	result := []domain.Comment{}
+	for _, comment := range comments {
+		result = append(result, comment.ToDomain())
+	}
+	return result, nil
 }
 
-func (r *articleRepo) DeleteComment(ctx context.Context, arg port.DeleteCommentPayload) error {
+func (r *articleRepo) DeleteComment(ctx context.Context, arg domain.Comment) error {
+	comment := model.AsComment(arg)
 	_, err := r.db.NewDelete().
-		Model(&arg.Comment).
-		Where("id = ?", arg.Comment.ID).
-		Where("author_id = ?", arg.Comment.AuthorID).
-		Where("article_id = ?", arg.Comment.ArticleID).
+		Model(&comment).
+		Where("id = ?", comment.ID).
+		Where("author_id = ?", comment.AuthorID).
+		Where("article_id = ?", comment.ArticleID).
 		Exec(ctx)
 	if err != nil {
 		return intoException(err)
