@@ -25,7 +25,7 @@ func (s *userService) Register(ctx context.Context, req port.RegisterParams) (us
 	if err != nil {
 		return domain.User{}, exception.Into(err)
 	}
-	user, err = s.property.repo.User().CreateUser(ctx, port.CreateUserPayload{User: reqUser})
+	user, err = s.property.repo.User().CreateUser(ctx, reqUser)
 	if err != nil {
 		return domain.User{}, exception.Into(err)
 	}
@@ -84,19 +84,17 @@ func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (us
 		return domain.User{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
-	payload := port.UpdateUserPayload{
-		User: domain.User{
-			ID:        arg.User.ID,
-			Username:  arg.User.Username,
-			Email:     arg.User.Email,
-			Password:  arg.User.Password,
-			Image:     arg.User.Image,
-			Bio:       arg.User.Bio,
-			UpdatedAt: time.Now(),
-		},
+	payload := domain.User{
+		ID:        arg.User.ID,
+		Username:  arg.User.Username,
+		Email:     arg.User.Email,
+		Password:  arg.User.Password,
+		Image:     arg.User.Image,
+		Bio:       arg.User.Bio,
+		UpdatedAt: time.Now(),
 	}
 	if arg.User.Password != "" {
-		if err := payload.User.SetPassword(arg.User.Password); err != nil {
+		if err := payload.SetPassword(arg.User.Password); err != nil {
 			return domain.User{}, exception.Into(err)
 		}
 	}
@@ -163,7 +161,7 @@ func (s *userService) Follow(ctx context.Context, arg port.ProfileParams) (user 
 	if err != nil {
 		return domain.User{}, exception.Into(err)
 	}
-	_, err = s.property.repo.User().Follow(ctx, port.FollowPayload{Follow: newFollow})
+	_, err = s.property.repo.User().Follow(ctx, newFollow)
 	if err != nil {
 		return domain.User{}, exception.Into(err)
 	}
@@ -194,10 +192,10 @@ func (s *userService) UnFollow(ctx context.Context, arg port.ProfileParams) (use
 		return user, nil
 	}
 
-	_, err = s.property.repo.User().UnFollow(ctx, port.UnFollowPayload{Follow: domain.UserFollow{
+	_, err = s.property.repo.User().UnFollow(ctx, domain.UserFollow{
 		FollowerID: arg.AuthArg.Payload.UserID,
 		FolloweeID: user.ID,
-	}})
+	})
 	if err != nil {
 		return domain.User{}, exception.Into(err)
 	}

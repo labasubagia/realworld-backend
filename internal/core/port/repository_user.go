@@ -6,14 +6,6 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
 )
 
-type CreateUserPayload struct {
-	User domain.User
-}
-
-type UpdateUserPayload struct {
-	User domain.User
-}
-
 type FilterUserPayload struct {
 	IDs       []domain.ID
 	Usernames []string
@@ -25,19 +17,13 @@ type FilterUserFollowPayload struct {
 	FolloweeIDs []domain.ID
 }
 
-type FollowPayload struct {
-	Follow domain.UserFollow
-}
-
-type UnFollowPayload FollowPayload
-
 type UserRepository interface {
-	CreateUser(context.Context, CreateUserPayload) (domain.User, error)
-	UpdateUser(context.Context, UpdateUserPayload) (domain.User, error)
+	CreateUser(context.Context, domain.User) (domain.User, error)
+	UpdateUser(context.Context, domain.User) (domain.User, error)
 	FilterUser(context.Context, FilterUserPayload) ([]domain.User, error)
 	FindOne(context.Context, FilterUserPayload) (domain.User, error)
 
 	FilterFollow(context.Context, FilterUserFollowPayload) ([]domain.UserFollow, error)
-	Follow(context.Context, FollowPayload) (domain.UserFollow, error)
-	UnFollow(context.Context, UnFollowPayload) (domain.UserFollow, error)
+	Follow(context.Context, domain.UserFollow) (domain.UserFollow, error)
+	UnFollow(context.Context, domain.UserFollow) (domain.UserFollow, error)
 }
