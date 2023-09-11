@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -243,12 +242,9 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			return []domain.Article{}, exception.Into(err)
 		}
 
-		// ? DISABLE [error newman test]
-		// if len(authors) == 0 {
-		// 	authorNames := strings.Join(arg.AuthorNames, ", ")
-		// 	msg := fmt.Sprintf("author %s does not exists", authorNames)
-		// 	return []domain.Article{}, exception.Validation().AddError("author", msg)
-		// }
+		if len(authors) == 0 {
+			return []domain.Article{}, nil
+		}
 
 		for _, author := range authors {
 			authorIDs = append(authorIDs, author.ID)
@@ -265,12 +261,9 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			return []domain.Article{}, exception.Into(err)
 		}
 
-		// ? DISABLE [error newman test]
-		// if len(tags) == 0 {
-		// 	tagNames := strings.Join(arg.Tags, ", ")
-		// 	msg := fmt.Sprintf("tag %s does not exists", tagNames)
-		// 	return []domain.Article{}, exception.Validation().AddError("tag", msg)
-		// }
+		if len(tags) == 0 {
+			return []domain.Article{}, nil
+		}
 
 		tagIDs := []domain.ID{}
 		for _, tag := range tags {
@@ -300,9 +293,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			return []domain.Article{}, exception.Into(err)
 		}
 		if len(users) == 0 {
-			userNames := strings.Join(arg.FavoritedNames, ", ")
-			msg := fmt.Sprintf("user for favorite filter %s does not exists", userNames)
-			return []domain.Article{}, exception.Validation().AddError("favorited", msg)
+			return []domain.Article{}, nil
 		}
 		userIDs := []domain.ID{}
 		for _, user := range users {
