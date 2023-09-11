@@ -15,7 +15,7 @@ func TestJWTMaker(t *testing.T) {
 	maker, err := NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)
 
-	userID := domain.ID(util.RandomInt(1, 100))
+	userID := domain.RandomID()
 	duration := time.Minute
 
 	issuedAt := time.Now()
@@ -40,7 +40,7 @@ func TestExpiredJWTToken(t *testing.T) {
 	maker, err := NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)
 
-	token, payload, err := maker.CreateToken(domain.ID(util.RandomInt(1, 10)), -time.Minute)
+	token, payload, err := maker.CreateToken(domain.RandomID(), -time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	require.NotEmpty(t, payload)
@@ -55,7 +55,7 @@ func TestExpiredJWTToken(t *testing.T) {
 }
 
 func TestInvalidJWTToken(t *testing.T) {
-	payload, err := NewPayload(domain.ID(util.RandomInt(1, 10)), time.Minute)
+	payload, err := NewPayload(domain.RandomID(), time.Minute)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)

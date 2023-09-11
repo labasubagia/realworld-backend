@@ -90,11 +90,11 @@ func serializeArticle(arg domain.Article) Article {
 }
 
 type Comment struct {
-	ID        int64   `json:"id"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt string  `json:"updatedAt"`
-	Body      string  `json:"body"`
-	Author    Profile `json:"author"`
+	ID        domain.ID `json:"id"`
+	CreatedAt string    `json:"createdAt"`
+	UpdatedAt string    `json:"updatedAt"`
+	Body      string    `json:"body"`
+	Author    Profile   `json:"author"`
 }
 
 type CommentResponse struct {
@@ -107,7 +107,7 @@ type CommentsResponse struct {
 
 func serializeComment(arg domain.Comment) Comment {
 	return Comment{
-		ID:        int64(arg.ID),
+		ID:        arg.ID,
 		Body:      arg.Body,
 		Author:    serializeProfile(arg.Author),
 		CreatedAt: timeString(arg.CreatedAt),
