@@ -277,6 +277,10 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		if err != nil {
 			return []domain.Article{}, exception.Into(err)
 		}
+		if len(articleTags) == 0 {
+			return []domain.Article{}, nil
+		}
+
 		for _, articleTag := range articleTags {
 			taggedArticleIDs = append(taggedArticleIDs, articleTag.ArticleID)
 		}
@@ -307,6 +311,10 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		if err != nil {
 			return []domain.Article{}, exception.Into(err)
 		}
+		if len(favorites) == 0 {
+			return []domain.Article{}, nil
+		}
+
 		for _, favorite := range favorites {
 			favoritedArticleIDs = append(favoritedArticleIDs, favorite.ArticleID)
 		}
