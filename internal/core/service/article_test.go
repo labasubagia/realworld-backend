@@ -478,6 +478,36 @@ func TestDeleteComment(t *testing.T) {
 	require.Len(t, comments, 0)
 }
 
+func TestGetTags(t *testing.T) {
+	ctx := context.Background()
+
+	// create tags
+	payload := port.AddTagsPayload{
+		Tags: []string{
+			util.RandomString(2),
+			util.RandomString(3),
+			util.RandomString(4),
+		},
+	}
+
+	// no tags
+	current, err := testService.Article().ListTags(ctx)
+	require.Nil(t, err)
+
+	// create tags
+	_, err = testRepo.Article().AddTags(ctx, payload)
+	require.Nil(t, err)
+
+	// combine
+	expected := append(current, payload.Tags...)
+	sort.Strings(expected)
+
+	// result
+	actual, err := testService.Article().ListTags(ctx)
+	require.Nil(t, err)
+	require.Equal(t, expected, actual)
+}
+
 func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) domain.Article {
 	return createArticle(t, createArticleArg(author, authArg))
 }

@@ -65,20 +65,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		return domain.Article{}, exception.Into(err)
 	}
 
-	// Get decorated article
-	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
-		authArg:  arg.AuthArg,
-		articles: []domain.Article{article},
-	})
-	if err != nil {
-		return domain.Article{}, exception.Into(err)
-	}
-	if len(articleInfos) == 0 {
-		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
-	}
-	article = articleInfos[0]
-
-	return article, nil
+	return s.infoArticle(ctx, GetArticleInfoParams{authArg: arg.AuthArg, article: article})
 }
 
 func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParams) (domain.Article, error) {
@@ -103,19 +90,7 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 		return domain.Article{}, exception.Into(err)
 	}
 
-	// Get decorated article
-	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
-		authArg:  arg.AuthArg,
-		articles: []domain.Article{updated},
-	})
-	if err != nil {
-		return domain.Article{}, exception.Into(err)
-	}
-	if len(articleInfos) == 0 {
-		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
-	}
-
-	return articleInfos[0], nil
+	return s.infoArticle(ctx, GetArticleInfoParams{authArg: arg.AuthArg, article: updated})
 }
 
 func (s *articleService) Delete(ctx context.Context, arg port.DeleteArticleParams) error {
@@ -167,17 +142,7 @@ func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoritePa
 		}
 	}
 
-	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
-		authArg:  arg.AuthArg,
-		articles: []domain.Article{article},
-	})
-	if err != nil {
-		return domain.Article{}, exception.Into(err)
-	}
-	if len(articleInfos) == 0 {
-		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
-	}
-	return articleInfos[0], nil
+	return s.infoArticle(ctx, GetArticleInfoParams{authArg: arg.AuthArg, article: article})
 }
 
 func (s *articleService) RemoveFavorite(ctx context.Context, arg port.RemoveFavoriteParams) (result domain.Article, err error) {
@@ -199,17 +164,7 @@ func (s *articleService) RemoveFavorite(ctx context.Context, arg port.RemoveFavo
 		return domain.Article{}, exception.Into(err)
 	}
 
-	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
-		authArg:  arg.AuthArg,
-		articles: []domain.Article{article},
-	})
-	if err != nil {
-		return domain.Article{}, exception.Into(err)
-	}
-	if len(articleInfos) == 0 {
-		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
-	}
-	return articleInfos[0], nil
+	return s.infoArticle(ctx, GetArticleInfoParams{authArg: arg.AuthArg, article: article})
 }
 
 func (s *articleService) Get(ctx context.Context, arg port.GetArticleParams) (domain.Article, error) {
@@ -381,6 +336,25 @@ func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (
 	}
 
 	return result, nil
+}
+
+type GetArticleInfoParams struct {
+	authArg port.AuthParams
+	article domain.Article
+}
+
+func (s *articleService) infoArticle(ctx context.Context, arg GetArticleInfoParams) (domain.Article, error) {
+	listInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
+		authArg:  arg.authArg,
+		articles: []domain.Article{arg.article},
+	})
+	if err != nil {
+		return domain.Article{}, exception.Into(err)
+	}
+	if len(listInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	}
+	return listInfos[0], nil
 }
 
 type GetListArticleInfoParams struct {
