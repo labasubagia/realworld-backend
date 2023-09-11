@@ -15,8 +15,6 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
-const formatTime string = "2006-01-02T15:04:05.999Z"
-
 type Server struct {
 	config  util.Config
 	router  *gin.Engine

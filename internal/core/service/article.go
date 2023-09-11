@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/labasubagia/realworld-backend/internal/core/domain"
@@ -20,9 +21,9 @@ func NewArticleService(property serviceProperty) port.ArticleService {
 	}
 }
 
-func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxParams) (result port.CreateArticleTxResult, err error) {
+func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxParams) (article domain.Article, err error) {
 	if arg.AuthArg.Payload == nil {
-		return port.CreateArticleTxResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.Article{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
 	err = s.property.repo.Atomic(ctx, func(r port.Repository) error {
@@ -31,7 +32,7 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		newArticle := domain.NewArticle(arg.Article)
 
 		// create article
-		result.Article, err = r.Article().CreateArticle(ctx, port.CreateArticlePayload{Article: newArticle})
+		article, err = r.Article().CreateArticle(ctx, port.CreateArticlePayload{Article: newArticle})
 		if err != nil {
 			return exception.Into(err)
 		}
@@ -45,45 +46,45 @@ func (s *articleService) Create(ctx context.Context, arg port.CreateArticleTxPar
 		for i, tag := range arg.Tags {
 			arg.Tags[i] = strings.ToLower(tag)
 		}
-		result.Tags, err = r.Article().AddTagsIfNotExists(ctx, port.AddTagsPayload{Tags: arg.Tags})
+		tags, err := r.Article().AddTags(ctx, port.AddTagsPayload{Tags: arg.Tags})
 		if err != nil {
 			return exception.Into(err)
 		}
 
 		// assign tags
 		tagIDs := []domain.ID{}
-		for _, tag := range result.Tags {
+		for _, tag := range tags {
 			tagIDs = append(tagIDs, tag.ID)
 		}
-		_, err := r.Article().AssignArticleTags(ctx, port.AssignTagPayload{ArticleID: result.Article.ID, TagIDs: tagIDs})
+		_, err = r.Article().AssignArticleTags(ctx, port.AssignTagPayload{ArticleID: article.ID, TagIDs: tagIDs})
 		if err != nil {
 			return exception.Into(err)
 		}
 		return nil
 	})
 	if err != nil {
-		return port.CreateArticleTxResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	// Get decorated article
 	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
 		authArg:  arg.AuthArg,
-		articles: []domain.Article{result.Article},
+		articles: []domain.Article{article},
 	})
 	if err != nil {
-		return port.CreateArticleTxResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
-	if len(articleInfos.Articles) == 0 {
-		return port.CreateArticleTxResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	if len(articleInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
-	result.Article = articleInfos.Articles[0]
+	article = articleInfos[0]
 
-	return result, nil
+	return article, nil
 }
 
-func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParams) (port.UpdateArticleResult, error) {
+func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParams) (domain.Article, error) {
 	if arg.AuthArg.Payload == nil {
-		return port.UpdateArticleResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.Article{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
 	current, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
@@ -91,7 +92,7 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 		AuthorIDs: []domain.ID{arg.AuthArg.Payload.UserID},
 	})
 	if err != nil {
-		return port.UpdateArticleResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	current.Title = arg.Article.Title
@@ -100,7 +101,7 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 
 	updated, err := s.property.repo.Article().UpdateArticle(ctx, port.UpdateArticlePayload{Article: current})
 	if err != nil {
-		return port.UpdateArticleResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	// Get decorated article
@@ -109,17 +110,13 @@ func (s *articleService) Update(ctx context.Context, arg port.UpdateArticleParam
 		articles: []domain.Article{updated},
 	})
 	if err != nil {
-		return port.UpdateArticleResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
-	if len(articleInfos.Articles) == 0 {
-		return port.UpdateArticleResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
-	}
-
-	result := port.UpdateArticleResult{
-		Article: articleInfos.Articles[0],
+	if len(articleInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
 
-	return result, nil
+	return articleInfos[0], nil
 }
 
 func (s *articleService) Delete(ctx context.Context, arg port.DeleteArticleParams) error {
@@ -144,15 +141,15 @@ func (s *articleService) Delete(ctx context.Context, arg port.DeleteArticleParam
 	return nil
 }
 
-func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoriteParams) (result port.AddFavoriteResult, err error) {
+func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoriteParams) (result domain.Article, err error) {
 	if arg.AuthArg.Payload == nil {
-		return port.AddFavoriteResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.Article{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
 		Slugs: []string{arg.Slug},
 	})
 	if err != nil {
-		return port.AddFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	favorites, err := s.property.repo.Article().FilterFavorite(ctx, port.FilterFavoritePayload{
@@ -160,7 +157,7 @@ func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoritePa
 		UserIDs:    []domain.ID{arg.AuthArg.Payload.UserID},
 	})
 	if err != nil {
-		return port.AddFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	if len(favorites) == 0 {
@@ -169,34 +166,32 @@ func (s *articleService) AddFavorite(ctx context.Context, arg port.AddFavoritePa
 			UserID:    arg.AuthArg.Payload.UserID,
 		})
 		if err != nil {
-			return port.AddFavoriteResult{}, exception.Into(err)
+			return domain.Article{}, exception.Into(err)
 		}
 	}
 
-	list, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
+	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
 		authArg:  arg.AuthArg,
 		articles: []domain.Article{article},
 	})
 	if err != nil {
-		return port.AddFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
-	if len(list.Articles) == 0 {
-		return port.AddFavoriteResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	if len(articleInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
-	result.Article = list.Articles[0]
-
-	return result, nil
+	return articleInfos[0], nil
 }
 
-func (s *articleService) RemoveFavorite(ctx context.Context, arg port.RemoveFavoriteParams) (result port.RemoveFavoriteResult, err error) {
+func (s *articleService) RemoveFavorite(ctx context.Context, arg port.RemoveFavoriteParams) (result domain.Article, err error) {
 	if arg.AuthArg.Payload == nil {
-		return port.RemoveFavoriteResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.Article{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
 		Slugs: []string{arg.Slug},
 	})
 	if err != nil {
-		return port.RemoveFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
 	_, err = s.property.repo.Article().RemoveFavorite(ctx, domain.ArticleFavorite{
@@ -204,46 +199,41 @@ func (s *articleService) RemoveFavorite(ctx context.Context, arg port.RemoveFavo
 		UserID:    arg.AuthArg.Payload.UserID,
 	})
 	if err != nil {
-		return port.RemoveFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 
-	list, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
+	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{
 		authArg:  arg.AuthArg,
 		articles: []domain.Article{article},
 	})
 	if err != nil {
-		return port.RemoveFavoriteResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
-	if len(list.Articles) == 0 {
-		return port.RemoveFavoriteResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	if len(articleInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
-	result.Article = list.Articles[0]
-
-	return result, nil
+	return articleInfos[0], nil
 }
 
-func (s *articleService) Get(ctx context.Context, arg port.GetArticleParams) (port.GetArticleResult, error) {
+func (s *articleService) Get(ctx context.Context, arg port.GetArticleParams) (domain.Article, error) {
 	articles, err := s.property.repo.Article().FilterArticle(ctx, port.FilterArticlePayload{
 		Slugs: []string{arg.Slug},
 	})
 	if err != nil {
-		return port.GetArticleResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
 	articleInfos, err := s.listInfoArticles(ctx, GetListArticleInfoParams{authArg: arg.AuthArg, articles: articles})
 	if err != nil {
-		return port.GetArticleResult{}, exception.Into(err)
+		return domain.Article{}, exception.Into(err)
 	}
-	if len(articleInfos.Articles) == 0 {
-		return port.GetArticleResult{}, exception.New(exception.TypeNotFound, "article not found", nil)
+	if len(articleInfos) == 0 {
+		return domain.Article{}, exception.New(exception.TypeNotFound, "article not found", nil)
 	}
 
-	result := port.GetArticleResult{
-		Article: articleInfos.Articles[0],
-	}
-	return result, nil
+	return articleInfos[0], nil
 }
 
-func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (result port.ListArticleResult, err error) {
+func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (result []domain.Article, err error) {
 
 	// filter authors
 	authorIDs := []domain.ID{}
@@ -252,7 +242,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			Usernames: arg.AuthorNames,
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 
 		// ? DISABLE [error newman test]
@@ -260,7 +250,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		// if len(authors) == 0 {
 		// 	authorNames := strings.Join(arg.AuthorNames, ", ")
 		// 	msg := fmt.Sprintf("author %s does not exists", authorNames)
-		// 	return port.ListArticleResult{}, exception.Validation().AddError("author", msg)
+		// 	return []domain.Article{}, exception.Validation().AddError("author", msg)
 		// }
 
 		for _, author := range authors {
@@ -275,12 +265,12 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		// find tags
 		tags, err := s.property.repo.Article().FilterTags(ctx, port.FilterTagPayload{Names: arg.Tags})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		if len(tags) == 0 {
 			tagNames := strings.Join(arg.Tags, ", ")
 			msg := fmt.Sprintf("tag %s does not exists", tagNames)
-			return port.ListArticleResult{}, exception.Validation().AddError("tag", msg)
+			return []domain.Article{}, exception.Validation().AddError("tag", msg)
 		}
 		tagIDs := []domain.ID{}
 		for _, tag := range tags {
@@ -292,7 +282,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			TagIDs: tagIDs,
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		for _, articleTag := range articleTags {
 			taggedArticleIDs = append(taggedArticleIDs, articleTag.ArticleID)
@@ -307,12 +297,12 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			Usernames: arg.FavoritedNames,
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		if len(users) == 0 {
 			userNames := strings.Join(arg.FavoritedNames, ", ")
 			msg := fmt.Sprintf("user for favorite filter %s does not exists", userNames)
-			return port.ListArticleResult{}, exception.Validation().AddError("favorited", msg)
+			return []domain.Article{}, exception.Validation().AddError("favorited", msg)
 		}
 		userIDs := []domain.ID{}
 		for _, user := range users {
@@ -324,7 +314,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 			UserIDs: userIDs,
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		for _, favorite := range favorites {
 			favoritedArticleIDs = append(favoritedArticleIDs, favorite.ArticleID)
@@ -339,7 +329,7 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		Offset:    arg.Offset,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 
 	result, err = s.listInfoArticles(ctx, GetListArticleInfoParams{
@@ -347,13 +337,13 @@ func (s *articleService) List(ctx context.Context, arg port.ListArticleParams) (
 		articles: articles,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 
 	return result, nil
 }
 
-func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (result port.ListArticleResult, err error) {
+func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (result []domain.Article, err error) {
 
 	if arg.AuthArg.Payload == nil {
 		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
@@ -363,14 +353,10 @@ func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (
 		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 	if len(followingAuthors) == 0 {
-		withInfos := port.ListArticleResult{
-			Articles: []domain.Article{},
-			Count:    0,
-		}
-		return withInfos, nil
+		return []domain.Article{}, nil
 	}
 
 	authorIDs := []domain.ID{}
@@ -384,7 +370,7 @@ func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (
 		Offset:    arg.Offset,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 
 	result, err = s.listInfoArticles(ctx, GetListArticleInfoParams{
@@ -392,7 +378,7 @@ func (s *articleService) Feed(ctx context.Context, arg port.ListArticleParams) (
 		articles: articles,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 
 	return result, nil
@@ -404,7 +390,7 @@ type GetListArticleInfoParams struct {
 }
 
 // listInfoArticles add decorator to articles
-func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticleInfoParams) (port.ListArticleResult, error) {
+func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticleInfoParams) ([]domain.Article, error) {
 
 	// Get article id and author id
 	authorIDs := []domain.ID{}
@@ -419,7 +405,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 		IDs: authorIDs,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 	authorMap := map[domain.ID]domain.User{}
 	for _, author := range authors {
@@ -434,7 +420,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 			FolloweeIDs: authorIDs,
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		for _, follow := range followed {
 			loggedUserFollowedAuthorMap[follow.FolloweeID] = true
@@ -446,7 +432,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 		ArticleIDs: articleIDs,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 	tagIDs := []domain.ID{}
 	for _, articleTag := range articleTags {
@@ -456,7 +442,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 		IDs: tagIDs,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 	tagMap := map[domain.ID]string{}
 	for _, tag := range tags {
@@ -473,7 +459,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 		ArticleIDs: articleIDs,
 	})
 	if err != nil {
-		return port.ListArticleResult{}, exception.Into(err)
+		return []domain.Article{}, exception.Into(err)
 	}
 	favoriteCountMap := map[domain.ID]int{}
 	for _, favorite := range favoriteCounts {
@@ -488,7 +474,7 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 			UserIDs:    []domain.ID{arg.authArg.Payload.UserID},
 		})
 		if err != nil {
-			return port.ListArticleResult{}, exception.Into(err)
+			return []domain.Article{}, exception.Into(err)
 		}
 		for _, favorited := range favorites {
 			loggedUserFavoritedArticleMap[favorited.ArticleID] = true
@@ -497,24 +483,25 @@ func (s *articleService) listInfoArticles(ctx context.Context, arg GetListArticl
 
 	// Compose result
 	for index, article := range arg.articles {
-		article.TagNames = articleTagMap[article.ID]
 		article.FavoriteCount = favoriteCountMap[article.ID]
 		article.IsFavorite = loggedUserFavoritedArticleMap[article.ID]
 		if author, ok := authorMap[article.AuthorID]; ok {
 			author.IsFollowed = loggedUserFollowedAuthorMap[author.ID]
 			article.Author = author
 		}
+		if tags, ok := articleTagMap[article.ID]; ok {
+			sort.Strings(tags)
+			article.TagNames = tags
+		} else {
+			article.TagNames = []string{}
+		}
 		arg.articles[index] = article
 	}
 
-	result := port.ListArticleResult{
-		Articles: arg.articles,
-		Count:    len(arg.articles),
-	}
-	return result, nil
+	return arg.articles, nil
 }
 
-func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentParams) (result port.AddCommentResult, err error) {
+func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentParams) (result domain.Comment, err error) {
 
 	if arg.AuthArg.Payload == nil {
 		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
@@ -524,7 +511,7 @@ func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentPara
 		Slugs: []string{arg.Slug},
 	})
 	if err != nil {
-		return port.AddCommentResult{}, exception.Into(err)
+		return domain.Comment{}, exception.Into(err)
 	}
 
 	comment, err := s.property.repo.Article().AddComment(ctx, domain.Comment{
@@ -533,47 +520,47 @@ func (s *articleService) AddComment(ctx context.Context, arg port.AddCommentPara
 		Body:      arg.Comment.Body,
 	})
 	if err != nil {
-		return port.AddCommentResult{}, exception.Into(err)
+		return domain.Comment{}, exception.Into(err)
 	}
 
 	// Get decorator info
-	comments, err := s.getCommentInfo(ctx, GetCommentInfo{
+	comments, err := s.listInfoComments(ctx, GetCommentInfo{
 		authArg:  arg.AuthArg,
 		comments: []domain.Comment{comment},
 	})
 	if err != nil {
-		return port.AddCommentResult{}, exception.Into(err)
+		return domain.Comment{}, exception.Into(err)
 	}
 	if len(comments) == 0 {
-		return port.AddCommentResult{}, exception.New(exception.TypeNotFound, "comment not found", nil)
+		return domain.Comment{}, exception.New(exception.TypeNotFound, "comment not found", nil)
 	}
 
-	return port.AddCommentResult{Comment: comments[0]}, nil
+	return comments[0], nil
 }
 
-func (s *articleService) ListComments(ctx context.Context, arg port.ListCommentParams) (result port.ListCommentResult, err error) {
+func (s *articleService) ListComments(ctx context.Context, arg port.ListCommentParams) (result []domain.Comment, err error) {
 
 	article, err := s.property.repo.Article().FindOneArticle(ctx, port.FilterArticlePayload{
 		Slugs: []string{arg.Slug},
 	})
 	if err != nil {
-		return port.ListCommentResult{}, exception.Into(err)
+		return []domain.Comment{}, exception.Into(err)
 	}
 
 	comments, err := s.property.repo.Article().FilterComment(ctx, port.FilterCommentPayload{
 		ArticleIDs: []domain.ID{article.ID},
 	})
 	if err != nil {
-		return port.ListCommentResult{}, exception.Into(err)
+		return []domain.Comment{}, exception.Into(err)
 	}
 
 	// Get decorator info
-	result.Comments, err = s.getCommentInfo(ctx, GetCommentInfo{
+	result, err = s.listInfoComments(ctx, GetCommentInfo{
 		authArg:  arg.AuthArg,
 		comments: comments,
 	})
 	if err != nil {
-		return port.ListCommentResult{}, exception.Into(err)
+		return []domain.Comment{}, exception.Into(err)
 	}
 
 	return result, nil
@@ -610,7 +597,7 @@ type GetCommentInfo struct {
 	comments []domain.Comment
 }
 
-func (s *articleService) getCommentInfo(ctx context.Context, arg GetCommentInfo) ([]domain.Comment, error) {
+func (s *articleService) listInfoComments(ctx context.Context, arg GetCommentInfo) ([]domain.Comment, error) {
 
 	// Get article id and author id
 	authorIDs := []domain.ID{}

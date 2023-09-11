@@ -20,68 +20,68 @@ func NewUserService(property serviceProperty) port.UserService {
 	}
 }
 
-func (s *userService) Register(ctx context.Context, req port.RegisterUserParams) (result port.RegisterUserResult, err error) {
+func (s *userService) Register(ctx context.Context, req port.RegisterParams) (user domain.User, err error) {
 	reqUser, err := domain.NewUser(req.User)
 	if err != nil {
-		return port.RegisterUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
-	result.User, err = s.property.repo.User().CreateUser(ctx, port.CreateUserPayload{User: reqUser})
+	user, err = s.property.repo.User().CreateUser(ctx, port.CreateUserPayload{User: reqUser})
 	if err != nil {
-		return port.RegisterUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.ID, 2*time.Hour)
+	user.Token, _, err = s.property.tokenMaker.CreateToken(user.ID, 2*time.Hour)
 	if err != nil {
-		return port.RegisterUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	return result, nil
+	return user, nil
 }
 
-func (s *userService) Login(ctx context.Context, req port.LoginUserParams) (result port.LoginUserResult, err error) {
+func (s *userService) Login(ctx context.Context, req port.LoginParams) (user domain.User, err error) {
 	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{Emails: []string{req.User.Email}})
 	if err != nil {
-		return port.LoginUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 	if len(existing) < 1 {
-		return port.LoginUserResult{}, exception.Validation().AddError("exception", "email or password invalid")
+		return domain.User{}, exception.Validation().AddError("exception", "email or password invalid")
 	}
 
-	result.User = existing[0]
-	if err := util.CheckPassword(req.User.Password, result.User.Password); err != nil {
-		return port.LoginUserResult{}, exception.Into(err)
+	user = existing[0]
+	if err := util.CheckPassword(req.User.Password, user.Password); err != nil {
+		return domain.User{}, exception.Into(err)
 	}
 
-	result.Token, _, err = s.property.tokenMaker.CreateToken(result.User.ID, 2*time.Hour)
+	user.Token, _, err = s.property.tokenMaker.CreateToken(user.ID, 2*time.Hour)
 	if err != nil {
-		return port.LoginUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	return result, nil
+	return user, nil
 }
 
-func (s *userService) Current(ctx context.Context, arg port.AuthParams) (result port.CurrentUserResult, err error) {
+func (s *userService) Current(ctx context.Context, arg port.AuthParams) (user domain.User, err error) {
 	if arg.Payload == nil {
-		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.User{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
 	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{IDs: []domain.ID{arg.Payload.UserID}})
 	if err != nil {
-		return port.CurrentUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
-	if len(existing) < 1 {
-		return port.CurrentUserResult{}, exception.New(exception.TypePermissionDenied, "no user found", nil)
+	if len(existing) == 0 {
+		return domain.User{}, exception.New(exception.TypePermissionDenied, "no user found", nil)
 	}
 
-	result.User = existing[0]
-	result.Token = arg.Token
+	user = existing[0]
+	user.Token = arg.Token
 
-	return result, nil
+	return user, nil
 }
 
-func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (result port.UpdateUserResult, err error) {
+func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (user domain.User, err error) {
 	if arg.AuthArg.Payload == nil {
-		return port.UpdateUserResult{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
+		return domain.User{}, exception.New(exception.TypePermissionDenied, "token payload not provided", nil)
 	}
 
 	payload := port.UpdateUserPayload{
@@ -97,105 +97,111 @@ func (s *userService) Update(ctx context.Context, arg port.UpdateUserParams) (re
 	}
 	if arg.User.Password != "" {
 		if err := payload.User.SetPassword(arg.User.Password); err != nil {
-			return port.UpdateUserResult{}, exception.Into(err)
+			return domain.User{}, exception.Into(err)
 		}
 	}
 
-	result.User, err = s.property.repo.User().UpdateUser(ctx, payload)
+	user, err = s.property.repo.User().UpdateUser(ctx, payload)
 	if err != nil {
-		return port.UpdateUserResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	result.Token = arg.AuthArg.Token
-	return result, nil
+	user.Token = arg.AuthArg.Token
+	return user, nil
 }
 
-func (s *userService) Profile(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
-	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+func (s *userService) Profile(ctx context.Context, arg port.ProfileParams) (user domain.User, err error) {
+	user, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
 	if arg.AuthArg.Payload == nil {
-		return result, nil
+		return user, nil
 	}
 
 	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
 		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
-		FolloweeIDs: []domain.ID{result.User.ID},
+		FolloweeIDs: []domain.ID{user.ID},
 	})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 	if len(follows) > 0 {
-		result.IsFollow = true
+		user.IsFollowed = true
 	}
 
-	return result, nil
+	return user, nil
 }
 
-func (s *userService) Follow(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
+func (s *userService) Follow(ctx context.Context, arg port.ProfileParams) (user domain.User, err error) {
 	if arg.AuthArg.Payload == nil {
-		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+		return user, exception.New(exception.TypePermissionDenied, "authentication required", nil)
 	}
 
-	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+	user, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
 	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
 		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
-		FolloweeIDs: []domain.ID{result.User.ID},
+		FolloweeIDs: []domain.ID{user.ID},
 	})
+	if err != nil {
+		return domain.User{}, exception.Into(err)
+	}
 	if len(follows) > 0 {
-		result.IsFollow = true
-		return result, nil
+		user.IsFollowed = true
+		return user, nil
 	}
 
 	newFollow, err := domain.NewUserFollow(domain.UserFollow{
 		FollowerID: arg.AuthArg.Payload.UserID,
-		FolloweeID: result.User.ID,
+		FolloweeID: user.ID,
 	})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 	_, err = s.property.repo.User().Follow(ctx, port.FollowPayload{Follow: newFollow})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	result.IsFollow = true
-	return result, nil
+	user.IsFollowed = true
+	return user, nil
 }
 
-func (s *userService) UnFollow(ctx context.Context, arg port.ProfileParams) (result port.ProfileResult, err error) {
+func (s *userService) UnFollow(ctx context.Context, arg port.ProfileParams) (user domain.User, err error) {
 	if arg.AuthArg.Payload == nil {
-		return result, exception.New(exception.TypePermissionDenied, "authentication required", nil)
+		return user, exception.New(exception.TypePermissionDenied, "authentication required", nil)
 	}
 
-	result.User, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
+	user, err = s.property.repo.User().FindOne(ctx, port.FilterUserPayload{Usernames: []string{arg.Username}})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
 	follows, err := s.property.repo.User().FilterFollow(ctx, port.FilterUserFollowPayload{
 		FollowerIDs: []domain.ID{arg.AuthArg.Payload.UserID},
-		FolloweeIDs: []domain.ID{result.User.ID},
+		FolloweeIDs: []domain.ID{user.ID},
 	})
-	if len(follows) < 1 {
-		result.IsFollow = false
-		return result, nil
+	if err != nil {
+		return domain.User{}, exception.Into(err)
+	}
+	if len(follows) == 0 {
+		user.IsFollowed = false
+		return user, nil
 	}
 
 	_, err = s.property.repo.User().UnFollow(ctx, port.UnFollowPayload{Follow: domain.UserFollow{
 		FollowerID: arg.AuthArg.Payload.UserID,
-		FolloweeID: result.User.ID,
+		FolloweeID: user.ID,
 	}})
 	if err != nil {
-		return port.ProfileResult{}, exception.Into(err)
+		return domain.User{}, exception.Into(err)
 	}
 
-	result.IsFollow = false
-	return result, nil
+	user.IsFollowed = false
+	return user, nil
 }

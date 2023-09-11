@@ -113,7 +113,7 @@ func (r *articleRepo) FilterTags(ctx context.Context, filter port.FilterTagPaylo
 	return result, nil
 }
 
-func (r *articleRepo) AddTagsIfNotExists(ctx context.Context, arg port.AddTagsPayload) ([]domain.Tag, error) {
+func (r *articleRepo) AddTags(ctx context.Context, arg port.AddTagsPayload) ([]domain.Tag, error) {
 	if len(arg.Tags) == 0 {
 		return []domain.Tag{}, exception.Validation().AddError("tags", "empty")
 	}

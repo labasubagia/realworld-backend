@@ -12,18 +12,9 @@ type CreateArticleTxParams struct {
 	Tags    []string
 }
 
-type CreateArticleTxResult struct {
-	Article domain.Article
-	Tags    []domain.Tag
-}
-
 type UpdateArticleParams struct {
 	AuthArg AuthParams
 	Slug    string
-	Article domain.Article
-}
-
-type UpdateArticleResult struct {
 	Article domain.Article
 }
 
@@ -42,11 +33,6 @@ type ListArticleParams struct {
 	Offset         int
 }
 
-type ListArticleResult struct {
-	Articles []domain.Article
-	Count    int
-}
-
 type AddFavoriteParams struct {
 	AuthArg AuthParams
 	Slug    string
@@ -55,19 +41,9 @@ type AddFavoriteParams struct {
 
 type RemoveFavoriteParams AddFavoriteParams
 
-type AddFavoriteResult struct {
-	Article domain.Article
-}
-
-type RemoveFavoriteResult AddFavoriteResult
-
 type GetArticleParams struct {
 	AuthArg AuthParams
 	Slug    string
-}
-
-type GetArticleResult struct {
-	Article domain.Article
 }
 
 type AddCommentParams struct {
@@ -76,17 +52,9 @@ type AddCommentParams struct {
 	Comment domain.Comment
 }
 
-type AddCommentResult struct {
-	Comment domain.Comment
-}
-
 type ListCommentParams struct {
 	AuthArg AuthParams
 	Slug    string
-}
-
-type ListCommentResult struct {
-	Comments []domain.Comment
 }
 
 type DeleteCommentParams struct {
@@ -96,19 +64,19 @@ type DeleteCommentParams struct {
 }
 
 type ArticleService interface {
-	Create(context.Context, CreateArticleTxParams) (CreateArticleTxResult, error)
-	Update(context.Context, UpdateArticleParams) (UpdateArticleResult, error)
+	Create(context.Context, CreateArticleTxParams) (domain.Article, error)
+	Update(context.Context, UpdateArticleParams) (domain.Article, error)
 	Delete(context.Context, DeleteArticleParams) error
-	List(context.Context, ListArticleParams) (ListArticleResult, error)
-	Feed(context.Context, ListArticleParams) (ListArticleResult, error)
-	Get(context.Context, GetArticleParams) (GetArticleResult, error)
+	List(context.Context, ListArticleParams) ([]domain.Article, error)
+	Feed(context.Context, ListArticleParams) ([]domain.Article, error)
+	Get(context.Context, GetArticleParams) (domain.Article, error)
 
-	AddComment(context.Context, AddCommentParams) (AddCommentResult, error)
-	ListComments(context.Context, ListCommentParams) (ListCommentResult, error)
+	AddComment(context.Context, AddCommentParams) (domain.Comment, error)
+	ListComments(context.Context, ListCommentParams) ([]domain.Comment, error)
 	DeleteComment(context.Context, DeleteCommentParams) error
 
-	AddFavorite(context.Context, AddFavoriteParams) (AddFavoriteResult, error)
-	RemoveFavorite(context.Context, RemoveFavoriteParams) (RemoveFavoriteResult, error)
+	AddFavorite(context.Context, AddFavoriteParams) (domain.Article, error)
+	RemoveFavorite(context.Context, RemoveFavoriteParams) (domain.Article, error)
 
 	ListTags(context.Context) ([]string, error)
 }

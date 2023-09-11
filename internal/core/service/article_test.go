@@ -109,7 +109,7 @@ func TestUpdateArticle(t *testing.T) {
 		article := createRandomArticle(t, author, authorAuth)
 		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
 			AuthArg: authorAuth,
-			Slug:    article.Article.Slug,
+			Slug:    article.Slug,
 			Article: domain.Article{
 				Title:       newTitle,
 				Description: newDescription,
@@ -118,29 +118,29 @@ func TestUpdateArticle(t *testing.T) {
 		})
 		require.Nil(t, err)
 		require.NotEmpty(t, result)
-		require.Equal(t, article.Article.ID, result.Article.ID)
-		require.Equal(t, newTitle, result.Article.Title)
-		require.NotEqual(t, article.Article.Slug, result.Article.Slug)
-		require.Equal(t, newDescription, result.Article.Description)
-		require.Equal(t, newBody, result.Article.Body)
+		require.Equal(t, article.ID, result.ID)
+		require.Equal(t, newTitle, result.Title)
+		require.NotEqual(t, article.Slug, result.Slug)
+		require.Equal(t, newDescription, result.Description)
+		require.Equal(t, newBody, result.Body)
 	})
 
 	t.Run("Partial", func(t *testing.T) {
 		article := createRandomArticle(t, author, authorAuth)
 		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
 			AuthArg: authorAuth,
-			Slug:    article.Article.Slug,
+			Slug:    article.Slug,
 			Article: domain.Article{
 				Title: newTitle,
 			},
 		})
 		require.Nil(t, err)
 		require.NotEmpty(t, result)
-		require.Equal(t, article.Article.ID, result.Article.ID)
-		require.Equal(t, newTitle, result.Article.Title)
-		require.NotEqual(t, article.Article.Slug, result.Article.Slug)
-		require.Equal(t, article.Article.Description, result.Article.Description)
-		require.Equal(t, article.Article.Body, result.Article.Body)
+		require.Equal(t, article.ID, result.ID)
+		require.Equal(t, newTitle, result.Title)
+		require.NotEqual(t, article.Slug, result.Slug)
+		require.Equal(t, article.Description, result.Description)
+		require.Equal(t, article.Body, result.Body)
 	})
 
 	t.Run("Update other article fail", func(t *testing.T) {
@@ -149,7 +149,7 @@ func TestUpdateArticle(t *testing.T) {
 		article := createRandomArticle(t, author, authorAuth)
 		result, err := testService.Article().Update(ctx, port.UpdateArticleParams{
 			AuthArg: randomAuth,
-			Slug:    article.Article.Slug,
+			Slug:    article.Slug,
 			Article: domain.Article{
 				Title:       newTitle,
 				Description: newDescription,
@@ -173,7 +173,7 @@ func TestDeleteArticle(t *testing.T) {
 	_, otherUserAuth, _ := createRandomUser(t)
 	err := testService.Article().Delete(ctx, port.DeleteArticleParams{
 		AuthArg: otherUserAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 	})
 	require.NotNil(t, err)
 	fail, ok := err.(*exception.Exception)
@@ -183,14 +183,14 @@ func TestDeleteArticle(t *testing.T) {
 	// delete ok
 	err = testService.Article().Delete(ctx, port.DeleteArticleParams{
 		AuthArg: authorAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 	})
 	require.Nil(t, err)
 
 	// not found
 	getResult, err := testService.Article().Get(ctx, port.GetArticleParams{
 		AuthArg: authorAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 	})
 	require.NotNil(t, err)
 	require.Empty(t, getResult)
@@ -207,26 +207,26 @@ func TestFavoriteArticle(t *testing.T) {
 	// add favorite
 	addFav, err := testService.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
 		AuthArg: readerAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 		UserID:  reader.ID,
 	})
 	require.Nil(t, err)
-	require.Equal(t, article.Article.Title, addFav.Article.Title)
-	require.Equal(t, article.Article.ID, addFav.Article.ID)
-	require.True(t, addFav.Article.IsFavorite)
-	require.Equal(t, 1, addFav.Article.FavoriteCount)
+	require.Equal(t, article.Title, addFav.Title)
+	require.Equal(t, article.ID, addFav.ID)
+	require.True(t, addFav.IsFavorite)
+	require.Equal(t, 1, addFav.FavoriteCount)
 
 	// remove favorite
 	removeFav, err := testService.Article().RemoveFavorite(context.Background(), port.RemoveFavoriteParams{
 		AuthArg: readerAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 		UserID:  reader.ID,
 	})
 	require.Nil(t, err)
-	require.Equal(t, article.Article.Title, removeFav.Article.Title)
-	require.Equal(t, article.Article.ID, removeFav.Article.ID)
-	require.False(t, removeFav.Article.IsFavorite)
-	require.Equal(t, 0, removeFav.Article.FavoriteCount)
+	require.Equal(t, article.Title, removeFav.Title)
+	require.Equal(t, article.ID, removeFav.ID)
+	require.False(t, removeFav.IsFavorite)
+	require.Equal(t, 0, removeFav.FavoriteCount)
 }
 
 func TestFeedArticle(t *testing.T) {
@@ -249,15 +249,13 @@ func TestFeedArticle(t *testing.T) {
 		result, err := testService.Article().Feed(ctx, port.ListArticleParams{AuthArg: reader1Auth})
 		require.Nil(t, err)
 		require.NotEmpty(t, result)
-		require.Len(t, result.Articles, N)
-		require.Equal(t, N, result.Count)
+		require.Len(t, result, N)
 	})
 
 	t.Run("Feed empty", func(t *testing.T) {
 		result, err := testService.Article().Feed(ctx, port.ListArticleParams{AuthArg: reader2Auth})
 		require.Nil(t, err)
-		require.Len(t, result.Articles, 0)
-		require.Equal(t, 0, result.Count)
+		require.Len(t, result, 0)
 	})
 }
 
@@ -287,7 +285,7 @@ func TestListArticleOK(t *testing.T) {
 		arg.Tags = tags
 		createResult := createArticle(t, arg)
 		// assign in desc order
-		createdArticles[N-1-i] = createResult.Article
+		createdArticles[N-1-i] = createResult
 	}
 
 	t.Run("Paginate", func(t *testing.T) {
@@ -297,13 +295,12 @@ func TestListArticleOK(t *testing.T) {
 			Offset: offset,
 		})
 		require.Nil(t, err)
-		require.Equal(t, limit, result.Count)
-		require.Len(t, result.Articles, limit)
+		require.Len(t, result, limit)
 
 		expectedArticleIDs, articleIDs := []domain.ID{}, []domain.ID{}
 		for i := 0; i < limit; i++ {
 			expectedArticleIDs = append(expectedArticleIDs, createdArticles[offset : offset+limit][i].ID)
-			articleIDs = append(articleIDs, result.Articles[i].ID)
+			articleIDs = append(articleIDs, result[i].ID)
 		}
 		require.Equal(t, expectedArticleIDs, articleIDs)
 	})
@@ -328,9 +325,8 @@ func TestListArticleOK(t *testing.T) {
 			AuthorNames: []string{author.Username},
 		})
 		require.Nil(t, err)
-		require.Equal(t, N, result.Count)
-		require.Len(t, result.Articles, N)
-		for _, article := range result.Articles {
+		require.Len(t, result, N)
+		for _, article := range result {
 			require.Equal(t, author.ID, article.AuthorID)
 			require.NotEqual(t, otherAuthor.ID, article.AuthorID)
 		}
@@ -350,9 +346,8 @@ func TestListArticleOK(t *testing.T) {
 	t.Run("Filter by tags", func(t *testing.T) {
 		result, err := testService.Article().List(ctx, port.ListArticleParams{Tags: tags})
 		require.Nil(t, err)
-		require.Equal(t, N, result.Count)
-		require.Len(t, result.Articles, N)
-		for _, article := range result.Articles {
+		require.Len(t, result, N)
+		for _, article := range result {
 			sort.Strings(article.TagNames)
 			require.Equal(t, tags, article.TagNames)
 		}
@@ -387,9 +382,8 @@ func TestListArticleOK(t *testing.T) {
 			FavoritedNames: []string{reader.Username},
 		})
 		require.Nil(t, err)
-		require.Equal(t, favN, result.Count)
-		require.Len(t, result.Articles, favN)
-		for _, article := range result.Articles {
+		require.Len(t, result, favN)
+		for _, article := range result {
 			require.Greater(t, article.FavoriteCount, 0)
 			require.True(t, article.IsFavorite)
 		}
@@ -405,13 +399,13 @@ func TestGetArticle(t *testing.T) {
 
 	result, err := testService.Article().Get(ctx, port.GetArticleParams{
 		AuthArg: readerAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 	})
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, article.Article.Title, result.Article.Title)
-	require.Equal(t, article.Article.Slug, result.Article.Slug)
-	require.Equal(t, article.Article.Body, result.Article.Body)
+	require.Equal(t, article.Title, result.Title)
+	require.Equal(t, article.Slug, result.Slug)
+	require.Equal(t, article.Body, result.Body)
 }
 
 func TestCreateComment(t *testing.T) {
@@ -425,34 +419,34 @@ func TestCreateComment(t *testing.T) {
 	// user1
 	arg1 := port.AddCommentParams{
 		AuthArg: user1Auth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 		Comment: domain.Comment{Body: util.RandomString(10)},
 	}
 	result, err := testService.Article().AddComment(ctx, arg1)
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, arg1.Comment.Body, result.Comment.Body)
-	require.Equal(t, article.Article.ID, result.Comment.ArticleID)
+	require.Equal(t, arg1.Comment.Body, result.Body)
+	require.Equal(t, article.ID, result.ArticleID)
 
 	// user2
 	arg2 := port.AddCommentParams{
 		AuthArg: user2Auth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 		Comment: domain.Comment{Body: util.RandomString(10)},
 	}
 	result, err = testService.Article().AddComment(ctx, arg2)
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, arg2.Comment.Body, result.Comment.Body)
-	require.Equal(t, article.Article.ID, result.Comment.ArticleID)
+	require.Equal(t, arg2.Comment.Body, result.Body)
+	require.Equal(t, article.ID, result.ArticleID)
 
 	// get
-	getResult, err := testService.Article().ListComments(ctx, port.ListCommentParams{
+	comments, err := testService.Article().ListComments(ctx, port.ListCommentParams{
 		AuthArg: authorAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 	})
 	require.Nil(t, err)
-	require.Len(t, getResult.Comments, 2)
+	require.Len(t, comments, 2)
 }
 
 func TestDeleteComment(t *testing.T) {
@@ -465,7 +459,7 @@ func TestDeleteComment(t *testing.T) {
 	// user create comment
 	arg := port.AddCommentParams{
 		AuthArg: userAuth,
-		Slug:    article.Article.Slug,
+		Slug:    article.Slug,
 		Comment: domain.Comment{Body: util.RandomString(10)},
 	}
 	result, err := testService.Article().AddComment(ctx, arg)
@@ -473,52 +467,50 @@ func TestDeleteComment(t *testing.T) {
 	require.NotEmpty(t, result)
 
 	// author can see comment found
-	getResult, err := testService.Article().ListComments(ctx, port.ListCommentParams{
+	comments, err := testService.Article().ListComments(ctx, port.ListCommentParams{
 		AuthArg: authorAuth,
 		Slug:    arg.Slug,
 	})
 	require.Nil(t, err)
-	require.Len(t, getResult.Comments, 1)
+	require.Len(t, comments, 1)
 
 	// user delete his comment
 	err = testService.Article().DeleteComment(ctx, port.DeleteCommentParams{
 		AuthArg:   userAuth,
 		Slug:      arg.Slug,
-		CommentID: result.Comment.ID,
+		CommentID: result.ID,
 	})
 	require.Nil(t, err)
 
 	// author cannot see comment (gone)
-	getResult, err = testService.Article().ListComments(ctx, port.ListCommentParams{
+	comments, err = testService.Article().ListComments(ctx, port.ListCommentParams{
 		AuthArg: authorAuth,
 		Slug:    arg.Slug,
 	})
 	require.Nil(t, err)
-	require.Len(t, getResult.Comments, 0)
+	require.Len(t, comments, 0)
 }
 
-func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) port.CreateArticleTxResult {
+func createRandomArticle(t *testing.T, author domain.User, authArg port.AuthParams) domain.Article {
 	return createArticle(t, createArticleArg(author, authArg))
 }
 
-func createArticle(t *testing.T, arg port.CreateArticleTxParams) port.CreateArticleTxResult {
+func createArticle(t *testing.T, arg port.CreateArticleTxParams) domain.Article {
 	result, err := testService.Article().Create(context.Background(), arg)
-	resultTags := []string{}
-	for _, tag := range result.Tags {
-		resultTags = append(resultTags, tag.Name)
-	}
-	sort.Strings(arg.Tags)
-	sort.Strings(resultTags)
 
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, arg.Article.AuthorID, result.Article.AuthorID)
-	require.Equal(t, arg.Article.Title, result.Article.Title)
-	require.Equal(t, arg.Article.Slug, result.Article.Slug)
-	require.Equal(t, arg.Article.Description, result.Article.Description)
-	require.Equal(t, arg.Article.Body, result.Article.Body)
-	require.Equal(t, arg.Tags, resultTags)
-	require.Len(t, resultTags, len(arg.Tags))
+	require.Equal(t, arg.Article.AuthorID, result.AuthorID)
+	require.Equal(t, arg.Article.Title, result.Title)
+	require.Equal(t, arg.Article.Slug, result.Slug)
+	require.Equal(t, arg.Article.Description, result.Description)
+	require.Equal(t, arg.Article.Body, result.Body)
+
+	sort.Strings(arg.Tags)
+	sort.Strings(result.TagNames)
+	require.Equal(t, arg.Tags, result.TagNames)
+
+	require.Len(t, result.TagNames, len(arg.Tags))
 	return result
 }
 

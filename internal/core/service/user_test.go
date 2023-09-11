@@ -26,7 +26,7 @@ func TestLoginOK(t *testing.T) {
 }
 
 func TestLoginInvalid(t *testing.T) {
-	result, err := testService.User().Login(context.Background(), port.LoginUserParams{
+	result, err := testService.User().Login(context.Background(), port.LoginParams{
 		User: domain.RandomUser(),
 	})
 	require.NotNil(t, err)
@@ -40,7 +40,7 @@ func TestCurrentUserOK(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
 
-	require.Equal(t, user, result.User)
+	require.Equal(t, user, result)
 	require.Equal(t, authArg.Token, result.Token)
 }
 
@@ -66,11 +66,11 @@ func TestUpdateUserOK(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, newEmail, result.User.Email)
-	require.Equal(t, newUsername, result.User.Username)
-	require.Equal(t, newImage, result.User.Image)
-	require.Equal(t, newBio, result.User.Bio)
-	require.Nil(t, util.CheckPassword(newPassword, result.User.Password))
+	require.Equal(t, newEmail, result.Email)
+	require.Equal(t, newUsername, result.Username)
+	require.Equal(t, newImage, result.Image)
+	require.Equal(t, newBio, result.Bio)
+	require.Nil(t, util.CheckPassword(newPassword, result.Password))
 }
 
 func TestUpdateUserSameDataOK(t *testing.T) {
@@ -89,11 +89,11 @@ func TestUpdateUserSameDataOK(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, user.Email, result.User.Email)
-	require.Equal(t, user.Username, result.User.Username)
-	require.Equal(t, user.Image, result.User.Image)
-	require.Equal(t, user.Bio, result.User.Bio)
-	require.Nil(t, util.CheckPassword(password, result.User.Password))
+	require.Equal(t, user.Email, result.Email)
+	require.Equal(t, user.Username, result.Username)
+	require.Equal(t, user.Image, result.Image)
+	require.Equal(t, user.Bio, result.Bio)
+	require.Nil(t, util.CheckPassword(password, result.Password))
 }
 
 func TestUpdateUserEmptyOK(t *testing.T) {
@@ -112,11 +112,11 @@ func TestUpdateUserEmptyOK(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, user.Email, result.User.Email)
-	require.Equal(t, user.Username, result.User.Username)
-	require.Equal(t, user.Image, result.User.Image)
-	require.Equal(t, user.Bio, result.User.Bio)
-	require.Nil(t, util.CheckPassword(password, result.User.Password))
+	require.Equal(t, user.Email, result.Email)
+	require.Equal(t, user.Username, result.Username)
+	require.Equal(t, user.Image, result.Image)
+	require.Equal(t, user.Bio, result.Bio)
+	require.Nil(t, util.CheckPassword(password, result.Password))
 }
 
 func TestProfile(t *testing.T) {
@@ -127,11 +127,11 @@ func TestProfile(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
-	require.Equal(t, user.Email, result.User.Email)
-	require.Equal(t, user.Username, result.User.Username)
-	require.Equal(t, user.Image, result.User.Image)
-	require.Equal(t, user.Bio, result.User.Bio)
-	require.False(t, result.IsFollow)
+	require.Equal(t, user.Email, result.Email)
+	require.Equal(t, user.Username, result.Username)
+	require.Equal(t, user.Image, result.Image)
+	require.Equal(t, user.Bio, result.Bio)
+	require.False(t, result.IsFollowed)
 }
 
 func TestFollowUnFollow(t *testing.T) {
@@ -147,30 +147,30 @@ func TestFollowUnFollow(t *testing.T) {
 	// follow
 	followResult, err := testService.User().Follow(ctx, arg)
 	require.Nil(t, err)
-	require.True(t, followResult.IsFollow)
+	require.True(t, followResult.IsFollowed)
 
 	// already follow
 	followResult, err = testService.User().Follow(ctx, arg)
 	require.Nil(t, err)
-	require.True(t, followResult.IsFollow)
+	require.True(t, followResult.IsFollowed)
 
 	profileResult, err := testService.User().Profile(ctx, arg)
 	require.Nil(t, err)
-	require.True(t, profileResult.IsFollow)
+	require.True(t, profileResult.IsFollowed)
 
 	// un follow
 	unFollowResult, err := testService.User().UnFollow(ctx, arg)
 	require.Nil(t, err)
-	require.False(t, unFollowResult.IsFollow)
+	require.False(t, unFollowResult.IsFollowed)
 
 	// already un follow
 	unFollowResult, err = testService.User().UnFollow(ctx, arg)
 	require.Nil(t, err)
-	require.False(t, unFollowResult.IsFollow)
+	require.False(t, unFollowResult.IsFollowed)
 
 	profileResult, err = testService.User().Profile(ctx, arg)
 	require.Nil(t, err)
-	require.False(t, profileResult.IsFollow)
+	require.False(t, profileResult.IsFollowed)
 
 }
 
@@ -191,14 +191,14 @@ func TestSelfFollowFail(t *testing.T) {
 
 func createRandomLogin(t *testing.T) {
 	user, _, password := createRandomUser(t)
-	createLogin(t, port.LoginUserParams{User: domain.User{
+	createLogin(t, port.LoginParams{User: domain.User{
 		Email:    user.Email,
 		Password: password,
 	}})
 }
 
-func createLogin(t *testing.T, arg port.LoginUserParams) (user domain.User, token, password string) {
-	result, err := testService.User().Login(context.Background(), port.LoginUserParams{
+func createLogin(t *testing.T, arg port.LoginParams) (user domain.User, token, password string) {
+	result, err := testService.User().Login(context.Background(), port.LoginParams{
 		User: domain.User{
 			Email:    arg.User.Email,
 			Password: arg.User.Password,
@@ -210,7 +210,7 @@ func createLogin(t *testing.T, arg port.LoginUserParams) (user domain.User, toke
 	payload, err := testService.TokenMaker().VerifyToken(result.Token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
-	require.Equal(t, result.User.ID, payload.UserID)
+	require.Equal(t, result.ID, payload.UserID)
 
 	return user, result.Token, password
 }
@@ -219,7 +219,7 @@ func createRandomUser(t *testing.T) (user domain.User, authArg port.AuthParams, 
 	return createUser(t, createUserArg())
 }
 
-func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, authArg port.AuthParams, password string) {
+func createUser(t *testing.T, arg port.RegisterParams) (user domain.User, authArg port.AuthParams, password string) {
 	image := arg.User.Image
 	if image == "" {
 		image = domain.UserDefaultImage
@@ -230,7 +230,7 @@ func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, au
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
 
-	user = result.User
+	user = result
 	require.Equal(t, arg.User.Email, user.Email)
 	require.Equal(t, arg.User.Username, user.Username)
 	require.Equal(t, image, user.Image)
@@ -249,8 +249,8 @@ func createUser(t *testing.T, arg port.RegisterUserParams) (user domain.User, au
 	return user, authArg, arg.User.Password
 }
 
-func createUserArg() port.RegisterUserParams {
-	return port.RegisterUserParams{
+func createUserArg() port.RegisterParams {
+	return port.RegisterParams{
 		User: domain.RandomUser(),
 	}
 }

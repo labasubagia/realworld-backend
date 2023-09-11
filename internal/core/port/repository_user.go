@@ -36,6 +36,7 @@ type UserRepository interface {
 	UpdateUser(context.Context, UpdateUserPayload) (domain.User, error)
 	FilterUser(context.Context, FilterUserPayload) ([]domain.User, error)
 	FindOne(context.Context, FilterUserPayload) (domain.User, error)
+
 	FilterFollow(context.Context, FilterUserFollowPayload) ([]domain.UserFollow, error)
 	Follow(context.Context, FollowPayload) (domain.UserFollow, error)
 	UnFollow(context.Context, UnFollowPayload) (domain.UserFollow, error)

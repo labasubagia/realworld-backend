@@ -11,24 +11,6 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util/exception"
 )
 
-type Article struct {
-	Slug           string   `json:"slug"`
-	Title          string   `json:"title"`
-	Description    string   `json:"description"`
-	Body           string   `json:"body"`
-	TagList        []string `json:"tagList"`
-	CreatedAt      string   `json:"createdAt"`
-	UpdatedAt      string   `json:"updatedAt"`
-	Favorited      bool     `json:"favorited"`
-	FavoritesCount int      `json:"favoritesCount"`
-	Author         Profile  `json:"author"`
-}
-
-type LisArticleResult struct {
-	Articles []Article `json:"articles"`
-	Count    int       `json:"articlesCount"`
-}
-
 func (server *Server) ListArticle(c *gin.Context) {
 	Tag := c.Query("tag")
 	Author := c.Query("author")
@@ -55,38 +37,18 @@ func (server *Server) ListArticle(c *gin.Context) {
 		arg.FavoritedNames = append(arg.FavoritedNames, FavoritedBy)
 	}
 
-	result, err := server.service.Article().List(context.Background(), arg)
+	articles, err := server.service.Article().List(context.Background(), arg)
 	if err != nil {
 		errorHandler(c, err)
 		return
 	}
 
-	res := LisArticleResult{
+	res := ArticlesResponse{
 		Articles: []Article{},
-		Count:    result.Count,
+		Count:    len(articles),
 	}
-	for _, article := range result.Articles {
-		tags := []string{}
-		if len(article.TagNames) > 0 {
-			tags = article.TagNames
-		}
-		res.Articles = append(res.Articles, Article{
-			Slug:           article.Slug,
-			Title:          article.Title,
-			Description:    article.Description,
-			Body:           article.Body,
-			TagList:        tags,
-			CreatedAt:      article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      article.IsFavorite,
-			FavoritesCount: article.FavoriteCount,
-			Author: Profile{
-				Username:  article.Author.Username,
-				Bio:       article.Author.Bio,
-				Image:     article.Author.Image,
-				Following: article.Author.IsFollowed,
-			},
-		})
+	for _, article := range articles {
+		res.Articles = append(res.Articles, serializeArticle(article))
 	}
 
 	c.JSON(http.StatusOK, res)
@@ -105,52 +67,28 @@ func (server *Server) FeedArticle(c *gin.Context) {
 		Offset:  offset,
 		Limit:   limit,
 	}
-	result, err := server.service.Article().Feed(context.Background(), arg)
+	articles, err := server.service.Article().Feed(context.Background(), arg)
 	if err != nil {
 		errorHandler(c, err)
 		return
 	}
 
-	res := LisArticleResult{
+	res := ArticlesResponse{
 		Articles: []Article{},
-		Count:    result.Count,
+		Count:    len(articles),
 	}
-	for _, article := range result.Articles {
-		tags := []string{}
-		if len(article.TagNames) > 0 {
-			tags = article.TagNames
-		}
-		res.Articles = append(res.Articles, Article{
-			Slug:           article.Slug,
-			Title:          article.Title,
-			Description:    article.Description,
-			Body:           article.Body,
-			TagList:        tags,
-			CreatedAt:      article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      article.IsFavorite,
-			FavoritesCount: article.FavoriteCount,
-			Author: Profile{
-				Username:  article.Author.Username,
-				Bio:       article.Author.Bio,
-				Image:     article.Author.Image,
-				Following: article.Author.IsFollowed,
-			},
-		})
+	for _, article := range articles {
+		res.Articles = append(res.Articles, serializeArticle(article))
 	}
 
 	c.JSON(http.StatusOK, res)
-}
-
-type GetArticleResult struct {
-	Article Article `json:"article"`
 }
 
 func (server *Server) GetArticle(c *gin.Context) {
 	slug := c.Param("slug")
 	authArg, _ := getAuthArg(c)
 
-	result, err := server.service.Article().Get(context.Background(), port.GetArticleParams{
+	article, err := server.service.Article().Get(context.Background(), port.GetArticleParams{
 		AuthArg: authArg,
 		Slug:    slug,
 	})
@@ -159,34 +97,11 @@ func (server *Server) GetArticle(c *gin.Context) {
 		return
 	}
 
-	tags := []string{}
-	if len(result.Article.TagNames) > 0 {
-		tags = result.Article.TagNames
-	}
-
-	res := GetArticleResult{
-		Article{
-			Slug:           result.Article.Slug,
-			Title:          result.Article.Title,
-			Description:    result.Article.Description,
-			Body:           result.Article.Body,
-			TagList:        tags,
-			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      result.Article.IsFavorite,
-			FavoritesCount: result.Article.FavoriteCount,
-			Author: Profile{
-				Username:  result.Article.Author.Username,
-				Bio:       result.Article.Author.Bio,
-				Image:     result.Article.Author.Image,
-				Following: result.Article.Author.IsFollowed,
-			},
-		},
-	}
+	res := ArticleResponse{serializeArticle(article)}
 	c.JSON(http.StatusOK, res)
 }
 
-type CreateArticleParams struct {
+type CreateArticle struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Body        string   `json:"body"`
@@ -194,11 +109,7 @@ type CreateArticleParams struct {
 }
 
 type CreateArticleRequest struct {
-	Article CreateArticleParams `json:"article"`
-}
-
-type CreateArticleResponse struct {
-	Article Article `json:"article"`
+	Article CreateArticle `json:"article"`
 }
 
 func (server *Server) CreateArticle(c *gin.Context) {
@@ -214,7 +125,7 @@ func (server *Server) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.Article().Create(context.Background(), port.CreateArticleTxParams{
+	article, err := server.service.Article().Create(context.Background(), port.CreateArticleTxParams{
 		AuthArg: authArg,
 		Tags:    req.Article.TagList,
 		Article: domain.Article{
@@ -228,45 +139,18 @@ func (server *Server) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	tags := []string{}
-	if len(result.Article.TagNames) > 0 {
-		tags = result.Article.TagNames
-	}
-	res := CreateArticleResponse{
-		Article: Article{
-			Slug:           result.Article.Slug,
-			Title:          result.Article.Title,
-			Description:    result.Article.Description,
-			Body:           result.Article.Body,
-			TagList:        tags,
-			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      result.Article.IsFavorite,
-			FavoritesCount: result.Article.FavoriteCount,
-			Author: Profile{
-				Username:  result.Article.Author.Username,
-				Bio:       result.Article.Author.Bio,
-				Image:     result.Article.Author.Image,
-				Following: result.Article.Author.IsFollowed,
-			},
-		},
-	}
-
+	res := ArticleResponse{serializeArticle(article)}
 	c.JSON(http.StatusCreated, res)
 }
 
-type UpdateArticleParams struct {
+type UpdateArticle struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Body        string `json:"body"`
 }
 
 type UpdateArticleRequest struct {
-	Article UpdateArticleParams `json:"article"`
-}
-
-type UpdateArticleResponse struct {
-	Article Article `json:"article"`
+	Article UpdateArticle `json:"article"`
 }
 
 func (server *Server) UpdateArticle(c *gin.Context) {
@@ -283,7 +167,7 @@ func (server *Server) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.Article().Update(context.Background(), port.UpdateArticleParams{
+	article, err := server.service.Article().Update(context.Background(), port.UpdateArticleParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		Article: domain.Article{
@@ -297,30 +181,7 @@ func (server *Server) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	tags := []string{}
-	if len(result.Article.TagNames) > 0 {
-		tags = result.Article.TagNames
-	}
-	res := CreateArticleResponse{
-		Article: Article{
-			Slug:           result.Article.Slug,
-			Title:          result.Article.Title,
-			Description:    result.Article.Description,
-			Body:           result.Article.Body,
-			TagList:        tags,
-			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      result.Article.IsFavorite,
-			FavoritesCount: result.Article.FavoriteCount,
-			Author: Profile{
-				Username:  result.Article.Author.Username,
-				Bio:       result.Article.Author.Bio,
-				Image:     result.Article.Author.Image,
-				Following: result.Article.Author.IsFollowed,
-			},
-		},
-	}
-
+	res := ArticleResponse{serializeArticle(article)}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -344,19 +205,7 @@ func (server *Server) DeleteArticle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
-type Comment struct {
-	ID        int64   `json:"id"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt string  `json:"updatedAt"`
-	Body      string  `json:"body"`
-	Author    Profile `json:"author"`
-}
-
 type AddCommentRequest struct {
-	Comment Comment `json:"comment"`
-}
-
-type AddCommentResponse struct {
 	Comment Comment `json:"comment"`
 }
 
@@ -386,32 +235,15 @@ func (server *Server) AddComment(c *gin.Context) {
 		return
 	}
 
-	res := AddCommentResponse{
-		Comment: Comment{
-			ID:        int64(result.Comment.ID),
-			CreatedAt: result.Comment.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt: result.Comment.UpdatedAt.UTC().Format(formatTime),
-			Body:      result.Comment.Body,
-			Author: Profile{
-				Username:  result.Comment.Author.Username,
-				Bio:       result.Comment.Author.Bio,
-				Image:     result.Comment.Author.Image,
-				Following: result.Comment.Author.IsFollowed,
-			},
-		},
-	}
+	res := CommentResponse{serializeComment(result)}
 	c.JSON(http.StatusOK, res)
-}
-
-type ListCommentResponse struct {
-	Comments []Comment `json:"comments"`
 }
 
 func (server *Server) ListComments(c *gin.Context) {
 	slug := c.Param("slug")
 	authArg, _ := getAuthArg(c)
 
-	result, err := server.service.Article().ListComments(context.Background(), port.ListCommentParams{
+	comments, err := server.service.Article().ListComments(context.Background(), port.ListCommentParams{
 		AuthArg: authArg,
 		Slug:    slug,
 	})
@@ -420,22 +252,11 @@ func (server *Server) ListComments(c *gin.Context) {
 		return
 	}
 
-	res := ListCommentResponse{
+	res := CommentsResponse{
 		Comments: []Comment{},
 	}
-	for _, comment := range result.Comments {
-		res.Comments = append(res.Comments, Comment{
-			ID:        int64(comment.ID),
-			CreatedAt: comment.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt: comment.UpdatedAt.UTC().Format(formatTime),
-			Body:      comment.Body,
-			Author: Profile{
-				Username:  comment.Author.Username,
-				Bio:       comment.Author.Bio,
-				Image:     comment.Author.Image,
-				Following: comment.Author.IsFollowed,
-			},
-		})
+	for _, comment := range comments {
+		res.Comments = append(res.Comments, serializeComment(comment))
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -468,10 +289,6 @@ func (server *Server) DeleteComment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
-type FavoriteArticleResponse struct {
-	Article Article `json:"article"`
-}
-
 func (server *Server) AddFavoriteArticle(c *gin.Context) {
 	slug := c.Param("slug")
 	authArg, err := getAuthArg(c)
@@ -480,7 +297,7 @@ func (server *Server) AddFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
+	article, err := server.service.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		UserID:  authArg.Payload.UserID,
@@ -490,28 +307,8 @@ func (server *Server) AddFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	tags := []string{}
-	if len(result.Article.TagNames) > 0 {
-		tags = result.Article.TagNames
-	}
-	res := FavoriteArticleResponse{
-		Article: Article{
-			Slug:           result.Article.Slug,
-			Title:          result.Article.Title,
-			Description:    result.Article.Description,
-			Body:           result.Article.Body,
-			TagList:        tags,
-			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      result.Article.IsFavorite,
-			FavoritesCount: result.Article.FavoriteCount,
-			Author: Profile{
-				Username:  result.Article.Author.Username,
-				Bio:       result.Article.Author.Bio,
-				Image:     result.Article.Author.Image,
-				Following: result.Article.Author.IsFollowed,
-			},
-		},
+	res := ArticleResponse{
+		Article: serializeArticle(article),
 	}
 
 	c.JSON(http.StatusOK, res)
@@ -525,7 +322,7 @@ func (server *Server) RemoveFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.Article().RemoveFavorite(context.Background(), port.RemoveFavoriteParams{
+	article, err := server.service.Article().RemoveFavorite(context.Background(), port.RemoveFavoriteParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		UserID:  authArg.Payload.UserID,
@@ -535,30 +332,7 @@ func (server *Server) RemoveFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	tags := []string{}
-	if len(result.Article.TagNames) > 0 {
-		tags = result.Article.TagNames
-	}
-	res := FavoriteArticleResponse{
-		Article: Article{
-			Slug:           result.Article.Slug,
-			Title:          result.Article.Title,
-			Description:    result.Article.Description,
-			Body:           result.Article.Body,
-			TagList:        tags,
-			CreatedAt:      result.Article.CreatedAt.UTC().Format(formatTime),
-			UpdatedAt:      result.Article.UpdatedAt.UTC().Format(formatTime),
-			Favorited:      result.Article.IsFavorite,
-			FavoritesCount: result.Article.FavoriteCount,
-			Author: Profile{
-				Username:  result.Article.Author.Username,
-				Bio:       result.Article.Author.Bio,
-				Image:     result.Article.Author.Image,
-				Following: result.Article.Author.IsFollowed,
-			},
-		},
-	}
-
+	res := ArticleResponse{serializeArticle(article)}
 	c.JSON(http.StatusOK, res)
 }
 

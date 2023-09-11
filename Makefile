@@ -16,3 +16,6 @@ new_migration:
 
 test:
 	go test -cover ./...
+
+e2e:
+	APIURL=http://0.0.0.0:5000 ./tests/run-api-tests.sh

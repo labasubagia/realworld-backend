@@ -7,60 +7,35 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util/token"
 )
 
-type RegisterUserParams struct {
-	User domain.User
-}
-
-type RegisterUserResult struct {
-	User  domain.User
-	Token string
-}
-
-type LoginUserParams struct {
-	User domain.User
-}
-
-type LoginUserResult struct {
-	User  domain.User
-	Token string
-}
-
-type CurrentUserResult struct {
-	User  domain.User
-	Token string
-}
-
 type AuthParams struct {
 	Token   string
 	Payload *token.Payload
 }
 
+type RegisterParams struct {
+	User domain.User
+}
+
+type LoginParams struct {
+	User domain.User
+}
 type UpdateUserParams struct {
 	AuthArg AuthParams
 	User    domain.User
 }
 
-type UpdateUserResult struct {
-	User  domain.User
-	Token string
-}
-
 type ProfileParams struct {
-	Username string
 	AuthArg  AuthParams
-}
-
-type ProfileResult struct {
-	User     domain.User
-	IsFollow bool
+	Username string
 }
 
 type UserService interface {
-	Register(context.Context, RegisterUserParams) (RegisterUserResult, error)
-	Login(context.Context, LoginUserParams) (LoginUserResult, error)
-	Update(context.Context, UpdateUserParams) (UpdateUserResult, error)
-	Current(context.Context, AuthParams) (CurrentUserResult, error)
-	Profile(context.Context, ProfileParams) (ProfileResult, error)
-	Follow(context.Context, ProfileParams) (ProfileResult, error)
-	UnFollow(context.Context, ProfileParams) (ProfileResult, error)
+	Register(context.Context, RegisterParams) (domain.User, error)
+	Login(context.Context, LoginParams) (domain.User, error)
+	Update(context.Context, UpdateUserParams) (domain.User, error)
+	Current(context.Context, AuthParams) (domain.User, error)
+
+	Profile(context.Context, ProfileParams) (domain.User, error)
+	Follow(context.Context, ProfileParams) (domain.User, error)
+	UnFollow(context.Context, ProfileParams) (domain.User, error)
 }

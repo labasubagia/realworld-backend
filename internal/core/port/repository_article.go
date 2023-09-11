@@ -67,7 +67,7 @@ type ArticleRepository interface {
 	FindOneArticle(context.Context, FilterArticlePayload) (domain.Article, error)
 
 	FilterTags(context.Context, FilterTagPayload) ([]domain.Tag, error)
-	AddTagsIfNotExists(context.Context, AddTagsPayload) ([]domain.Tag, error)
+	AddTags(context.Context, AddTagsPayload) ([]domain.Tag, error)
 
 	FilterArticleTags(context.Context, FilterArticleTagPayload) ([]domain.ArticleTag, error)
 	AssignArticleTags(context.Context, AssignTagPayload) ([]domain.ArticleTag, error)

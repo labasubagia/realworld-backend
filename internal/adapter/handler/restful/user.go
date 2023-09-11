@@ -9,26 +9,14 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
-type UserResult struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Bio      string `json:"bio"`
-	Image    string `json:"image"`
-	Token    string `json:"token"`
-}
-
-type UserRegisterParams struct {
+type RegisterRequestUser struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 type RegisterRequest struct {
-	User UserRegisterParams `json:"user"`
-}
-
-type RegisterResponse struct {
-	User UserResult `json:"user"`
+	User RegisterRequestUser `json:"user"`
 }
 
 func (server *Server) Register(c *gin.Context) {
@@ -38,7 +26,7 @@ func (server *Server) Register(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.User().Register(c, port.RegisterUserParams{
+	user, err := server.service.User().Register(c, port.RegisterParams{
 		User: domain.User{
 			Email:    req.User.Email,
 			Username: req.User.Username,
@@ -50,29 +38,17 @@ func (server *Server) Register(c *gin.Context) {
 		return
 	}
 
-	res := RegisterResponse{
-		User: UserResult{
-			Email:    result.User.Email,
-			Username: result.User.Username,
-			Bio:      result.User.Bio,
-			Image:    result.User.Email,
-			Token:    result.Token,
-		},
-	}
+	res := UserResponse{serializeUser(user)}
 	c.JSON(http.StatusCreated, res)
 }
 
-type UserLoginParams struct {
+type LoginParamUser struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type LoginRequest struct {
-	User UserLoginParams `json:"user"`
-}
-
-type LoginResponse struct {
-	User UserResult `json:"user"`
+	User LoginParamUser `json:"user"`
 }
 
 func (server *Server) Login(c *gin.Context) {
@@ -82,7 +58,7 @@ func (server *Server) Login(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.User().Login(c, port.LoginUserParams{
+	user, err := server.service.User().Login(c, port.LoginParams{
 		User: domain.User{
 			Email:    req.User.Email,
 			Password: req.User.Password,
@@ -93,20 +69,8 @@ func (server *Server) Login(c *gin.Context) {
 		return
 	}
 
-	res := LoginResponse{
-		User: UserResult{
-			Email:    result.User.Email,
-			Username: result.User.Username,
-			Bio:      result.User.Bio,
-			Image:    result.User.Email,
-			Token:    result.Token,
-		},
-	}
+	res := UserResponse{serializeUser(user)}
 	c.JSON(http.StatusOK, res)
-}
-
-type CurrentUserResponse struct {
-	User UserResult `json:"user"`
 }
 
 func (server *Server) CurrentUser(c *gin.Context) {
@@ -115,24 +79,16 @@ func (server *Server) CurrentUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	result, err := server.service.User().Current(context.Background(), authArg)
+	user, err := server.service.User().Current(context.Background(), authArg)
 	if err != nil {
 		errorHandler(c, err)
 		return
 	}
-	res := CurrentUserResponse{
-		User: UserResult{
-			Email:    result.User.Email,
-			Username: result.User.Username,
-			Bio:      result.User.Bio,
-			Image:    result.User.Image,
-			Token:    result.Token,
-		},
-	}
+	res := UserResponse{serializeUser(user)}
 	c.JSON(http.StatusOK, res)
 }
 
-type UserUpdateParams struct {
+type UpdateUser struct {
 	Email    string `json:"email,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
@@ -141,11 +97,7 @@ type UserUpdateParams struct {
 }
 
 type UpdateUserRequest struct {
-	User UserUpdateParams `json:"user"`
-}
-
-type UpdateUserResult struct {
-	User UserResult `json:"user"`
+	User UpdateUser `json:"user"`
 }
 
 func (server *Server) UpdateUser(c *gin.Context) {
@@ -159,7 +111,7 @@ func (server *Server) UpdateUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	result, err := server.service.User().Update(context.Background(), port.UpdateUserParams{
+	user, err := server.service.User().Update(context.Background(), port.UpdateUserParams{
 		AuthArg: authArg,
 		User: domain.User{
 			ID:       authArg.Payload.UserID,
@@ -174,37 +126,14 @@ func (server *Server) UpdateUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	res := UpdateUserResult{
-		User: UserResult{
-			Email:    result.User.Email,
-			Username: result.User.Username,
-			Bio:      result.User.Bio,
-			Image:    result.User.Image,
-			Token:    result.Token,
-		},
-	}
+	res := UserResponse{serializeUser(user)}
 	c.JSON(http.StatusOK, res)
 }
-
-type Profile struct {
-	Username  string `json:"username"`
-	Bio       string `json:"bio"`
-	Image     string `json:"image"`
-	Following bool   `json:"following"`
-}
-
-type ProfileUserResult struct {
-	Profile Profile `json:"profile"`
-}
-
-type FollowUserResult ProfileUserResult
-
-type UnFollowUserResult ProfileUserResult
 
 func (server *Server) Profile(c *gin.Context) {
 	username := c.Param("username")
 	authArg, _ := getAuthArg(c)
-	result, err := server.service.User().Profile(context.Background(), port.ProfileParams{
+	user, err := server.service.User().Profile(context.Background(), port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
@@ -212,14 +141,7 @@ func (server *Server) Profile(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	res := ProfileUserResult{
-		Profile: Profile{
-			Username:  result.User.Username,
-			Bio:       result.User.Bio,
-			Image:     result.User.Image,
-			Following: result.IsFollow,
-		},
-	}
+	res := ProfileResponse{serializeProfile(user)}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -230,7 +152,7 @@ func (server *Server) FollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	result, err := server.service.User().Follow(context.Background(), port.ProfileParams{
+	user, err := server.service.User().Follow(context.Background(), port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
@@ -238,14 +160,7 @@ func (server *Server) FollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	res := FollowUserResult{
-		Profile: Profile{
-			Username:  result.User.Username,
-			Image:     result.User.Image,
-			Bio:       result.User.Bio,
-			Following: result.IsFollow,
-		},
-	}
+	res := ProfileResponse{serializeProfile(user)}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -256,7 +171,7 @@ func (server *Server) UnFollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	result, err := server.service.User().UnFollow(context.Background(), port.ProfileParams{
+	user, err := server.service.User().UnFollow(context.Background(), port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
@@ -264,13 +179,6 @@ func (server *Server) UnFollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	res := UnFollowUserResult{
-		Profile: Profile{
-			Username:  result.User.Username,
-			Image:     result.User.Image,
-			Bio:       result.User.Bio,
-			Following: result.IsFollow,
-		},
-	}
+	res := ProfileResponse{serializeProfile(user)}
 	c.JSON(http.StatusOK, res)
 }
