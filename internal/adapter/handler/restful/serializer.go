@@ -43,7 +43,7 @@ func serializeUser(arg domain.User) User {
 		Email:    arg.Email,
 		Username: arg.Username,
 		Bio:      arg.Bio,
-		Image:    arg.Email,
+		Image:    arg.Image,
 		Token:    arg.Token,
 	}
 }
