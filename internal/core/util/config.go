@@ -7,6 +7,7 @@ import (
 type Config struct {
 	PostgresSource       string `mapstructure:"POSTGRES_SOURCE"`
 	PostgresMigrationURL string `mapstructure:"POSTGRES_MIGRATION_URL"`
+	MongoSource          string `mapstructure:"MONGO_SOURCE"`
 	HTTPServerAddress    string `mapstructure:"HTTP_SERVER_ADDRESS"`
 	TokenSymmetricKey    string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 }

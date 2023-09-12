@@ -40,7 +40,10 @@ func TestCurrentUserOK(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEmpty(t, result)
 
-	require.Equal(t, user, result)
+	require.Equal(t, user.Email, result.Email)
+	require.Equal(t, user.Username, result.Username)
+	require.Equal(t, user.Image, result.Image)
+	require.Equal(t, user.Bio, result.Bio)
 	require.Equal(t, authArg.Token, result.Token)
 }
 

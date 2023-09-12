@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "autoincrement",
+        "bson",
         "bundebug",
         "DBTX",
         "dgrijalva",
@@ -20,7 +21,8 @@
         "stdlib",
         "stretchr",
         "Upsert",
-        "uptrace"
+        "uptrace",
+        "writeconcern"
     ],
     "go.testFlags": [
         "-count=1"

@@ -91,10 +91,13 @@ func NewUser(arg User) (User, error) {
 }
 
 func RandomUser() User {
+	now := time.Now()
 	return User{
-		Email:    util.RandomEmail(),
-		Username: util.RandomUsername(),
-		Password: util.RandomString(8),
+		Email:     util.RandomEmail(),
+		Username:  util.RandomUsername(),
+		Password:  util.RandomString(8),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 }
 

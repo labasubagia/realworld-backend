@@ -80,13 +80,14 @@ type Comment struct {
 }
 
 func NewComment(arg Comment) Comment {
+	now := time.Now()
 	return Comment{
 		ID:        NewID(),
 		ArticleID: arg.ArticleID,
 		AuthorID:  arg.AuthorID,
 		Body:      arg.Body,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 }
 
