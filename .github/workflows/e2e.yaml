@@ -12,6 +12,22 @@ jobs:
   e2e:
     name: E2E Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: simple_bank
+        ports:
+          - 5432:5432
+      mongo:
+        image: mongo
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: root
+        ports:
+          - 27017:27017
 
     steps:
       - uses: actions/setup-go@v4
@@ -21,15 +37,6 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v3
-
-      - name: Compose up
-        uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: docker-compose.yml
-          down-flags: "--volumes"
-          services: |
-            postgres
-            mongo
 
       - name: Build
         run: |
