@@ -5,10 +5,10 @@ import (
 )
 
 type Config struct {
-	DBSource          string `mapstructure:"DB_SOURCE"`
-	DBMigrationURL    string `mapstructure:"DB_MIGRATION_URL"`
-	HTTPServerAddress string `mapstructure:"HTTP_SERVER_ADDRESS"`
-	TokenSymmetricKey string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	PostgresSource       string `mapstructure:"POSTGRES_SOURCE"`
+	PostgresMigrationURL string `mapstructure:"POSTGRES_MIGRATION_URL"`
+	HTTPServerAddress    string `mapstructure:"HTTP_SERVER_ADDRESS"`
+	TokenSymmetricKey    string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

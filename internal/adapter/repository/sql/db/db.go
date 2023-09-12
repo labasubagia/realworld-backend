@@ -41,7 +41,7 @@ func (db *DB) DB() *bun.DB {
 }
 
 func (db *DB) connect() (*bun.DB, error) {
-	config, err := pgx.ParseConfig(db.config.DBSource)
+	config, err := pgx.ParseConfig(db.config.PostgresSource)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (db *DB) connect() (*bun.DB, error) {
 }
 
 func (db *DB) migrate() error {
-	migration, err := migrate.New(db.config.DBMigrationURL, db.config.DBSource)
+	migration, err := migrate.New(db.config.PostgresMigrationURL, db.config.PostgresSource)
 	if err != nil {
 		log.Printf("cannot create new migration instance: %s", err)
 		return err

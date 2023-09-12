@@ -24,5 +24,6 @@
     ],
     "go.testFlags": [
         "-count=1"
-    ]
+    ],
+    "dotenv.enableAutocloaking": false
 }
