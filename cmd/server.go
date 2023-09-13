@@ -20,7 +20,7 @@ func init() {
 
 	rootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().StringP("database", "d", repository.DefaultRepoKey, fmt.Sprintf("select database in (%s)", dbOptStr))
-	serverCmd.Flags().IntP("port", "p", 5000, fmt.Sprint("server port "))
+	serverCmd.Flags().IntP("port", "p", config.HTTPServerPort, "server port")
 }
 
 var serverCmd = &cobra.Command{
@@ -33,7 +33,7 @@ var serverCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal("failed get port flag", err)
 		}
-		config.HTTPServerAddress = fmt.Sprintf("0.0.0.0:%d", port)
+		config.HTTPServerPort = port
 
 		dbType, err := cmd.Flags().GetString("database")
 		if err != nil {

@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -78,7 +79,7 @@ func (server *Server) setupRouter() {
 
 func (server *Server) Start() error {
 	srv := &http.Server{
-		Addr:    server.config.HTTPServerAddress,
+		Addr:    fmt.Sprintf(":%d", server.config.HTTPServerPort),
 		Handler: server.router,
 	}
 
