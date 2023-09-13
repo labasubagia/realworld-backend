@@ -44,7 +44,7 @@ jobs:
           go build -o app
 
       - name: Run
-        run: nohup ./app start &
+        run: nohup ./app server &
 
       - name: E2E
         run: |

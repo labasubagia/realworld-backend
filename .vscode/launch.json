@@ -5,13 +5,40 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Local Server",
+            "name": "Run Server",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
             "args": [
-                "start"
+                "server",
+            ]
+        },
+        {
+            "name": "Run Server (Postgres)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "args": [
+                "server",
+                "-d",
+                "postgres"
+            ]
+        },
+        {
+            "name": "Run Server (Mongo)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "args": [
+                "server",
+                "-d",
+                "mongo"
             ]
         }
     ]

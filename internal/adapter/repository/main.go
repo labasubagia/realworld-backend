@@ -7,24 +7,28 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
+const DefaultRepoKey = "default"
+
+type FnNewRepo func(util.Config) (port.Repository, error)
+
+var RepoFnMap = map[string]FnNewRepo{
+	DefaultRepoKey: sql.NewSQLRepository,
+	"postgres":     sql.NewSQLRepository,
+	"mongo":        mongo.NewMongoRepository,
+}
+
 func ListRepository(config util.Config) ([]port.Repository, error) {
-	type NewRepoFn func(util.Config) (port.Repository, error)
-	repoFns := []NewRepoFn{
-		mongo.NewMongoRepository,
-		sql.NewSQLRepository,
-	}
-	repos := make([]port.Repository, len(repoFns))
-	for i, fn := range repoFns {
+	repos := []port.Repository{}
+	for _, fn := range RepoFnMap {
 		repo, err := fn(config)
 		if err != nil {
 			return []port.Repository{}, err
 		}
-		repos[i] = repo
+		repos = append(repos, repo)
 	}
 	return repos, nil
 }
 
 func NewRepository(config util.Config) (port.Repository, error) {
-	return sql.NewSQLRepository(config)
-	// return mongo.NewMongoRepository(config)
+	return RepoFnMap[DefaultRepoKey](config)
 }

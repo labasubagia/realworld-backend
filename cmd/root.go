@@ -1,40 +1,30 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/spf13/cobra"
 )
 
-type Command struct {
-	config  util.Config
-	rootCmd *cobra.Command
+var config util.Config
+
+var rootCmd = &cobra.Command{
+	Use:   "realworld",
+	Short: "Realworld backend app",
+	Long:  "Realworld is an app about article similar medium.com and dev.to",
+	Run:   func(cmd *cobra.Command, args []string) {},
 }
 
-func (c *Command) AddCommand(fnCommands ...func(config util.Config) *cobra.Command) {
-	commands := []*cobra.Command{}
-	for _, fn := range fnCommands {
-		commands = append(commands, fn(c.config))
+func init() {
+	var err error
+
+	config, err = util.LoadConfig(".env")
+	if err != nil {
+		log.Fatal("failed to load env config", err)
 	}
-	c.rootCmd.AddCommand(commands...)
 }
 
-func (c *Command) Execute() error {
-	return c.rootCmd.Execute()
-}
-
-func NewCommand(config util.Config) *Command {
-	command := &Command{
-		config: config,
-		rootCmd: &cobra.Command{
-			Use:   "app",
-			Short: "App about article",
-			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println("see help")
-			},
-		},
-	}
-	command.AddCommand(startCmd)
-	return command
+func Execute() error {
+	return rootCmd.Execute()
 }
