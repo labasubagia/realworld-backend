@@ -13,5 +13,9 @@ migrate_drop:
 test:
 	go test -cover ./...
 
+test_all:
+	export TEST_REPO=all
+	make test
+
 e2e:
 	APIURL=http://0.0.0.0:5000 ./tests/run-api-tests.sh

@@ -39,5 +39,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Mod tidy
+        run: go mod tidy
+
       - name: Test
-        run: make test
+        run: make test_all

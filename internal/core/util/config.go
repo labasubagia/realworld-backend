@@ -10,6 +10,12 @@ type Config struct {
 	MongoSource          string `mapstructure:"MONGO_SOURCE"`
 	HTTPServerAddress    string `mapstructure:"HTTP_SERVER_ADDRESS"`
 	TokenSymmetricKey    string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+
+	TestRepo string `mapstructure:"TEST_REPO"`
+}
+
+func (c Config) IsTestAllRepo() bool {
+	return c.TestRepo == "all"
 }
 
 func LoadConfig(path string) (config Config, err error) {
