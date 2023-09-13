@@ -20,6 +20,7 @@ func init() {
 
 	rootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().StringP("database", "d", repository.DefaultRepoKey, fmt.Sprintf("select database in (%s)", dbOptStr))
+	serverCmd.Flags().IntP("port", "p", 5000, fmt.Sprint("server port "))
 }
 
 var serverCmd = &cobra.Command{
@@ -28,8 +29,18 @@ var serverCmd = &cobra.Command{
 	Long:  "Run gin server restful API",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dbType := cmd.Flag("database").Value.String()
+		port, err := cmd.Flags().GetInt("port")
+		if err != nil {
+			log.Fatal("failed get port flag", err)
+		}
+		config.HTTPServerAddress = fmt.Sprintf("0.0.0.0:%d", port)
+
+		dbType, err := cmd.Flags().GetString("database")
+		if err != nil {
+			log.Fatal("failed get database flag", err)
+		}
 		dbType = strings.ToLower(dbType)
+
 		newRepo, exist := repository.RepoFnMap[dbType]
 		if !exist {
 			log.Fatal("invalid database", dbType)
