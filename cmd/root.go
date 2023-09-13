@@ -13,7 +13,6 @@ var rootCmd = &cobra.Command{
 	Use:   "realworld",
 	Short: "Realworld backend app",
 	Long:  "Realworld is an app about article similar medium.com and dev.to",
-	Run:   func(cmd *cobra.Command, args []string) {},
 }
 
 func init() {
