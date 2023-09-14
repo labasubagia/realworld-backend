@@ -9,12 +9,12 @@ import (
 
 func errorHandler(c *gin.Context, err error) {
 	if err == nil {
-		c.JSON(http.StatusOK, nil)
+		c.AbortWithStatusJSON(http.StatusOK, nil)
 		return
 	}
 	fail, ok := err.(*exception.Exception)
 	if !ok {
-		c.JSON(http.StatusInternalServerError, fail)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, fail)
 		return
 	}
 	if !fail.HasError() {
@@ -31,5 +31,5 @@ func errorHandler(c *gin.Context, err error) {
 	default:
 		statusCode = http.StatusInternalServerError
 	}
-	c.JSON(statusCode, fail)
+	c.AbortWithStatusJSON(statusCode, fail)
 }
