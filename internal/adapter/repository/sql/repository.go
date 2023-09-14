@@ -10,6 +10,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
+const TypePostgres = "postgres"
+
 type sqlRepo struct {
 	db          bun.IDB
 	logger      port.Logger

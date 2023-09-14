@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
+const TypeMongo = "mongo"
+
 type mongoRepo struct {
 	db          DB
 	logger      port.Logger

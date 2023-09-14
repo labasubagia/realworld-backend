@@ -22,11 +22,9 @@
             "mode": "auto",
             "program": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-            "env": {
-                "ENVIRONMENT": "production"
-            },
             "args": [
                 "server",
+                "--prod"
             ]
         },
         {

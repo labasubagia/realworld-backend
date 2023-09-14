@@ -4,6 +4,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	EnvProduction  = "production"
+	EnvDevelopment = "development"
+)
+
 type Config struct {
 	Environment string `mapstructure:"ENVIRONMENT"`
 
@@ -20,7 +25,7 @@ type Config struct {
 }
 
 func (c Config) IsProduction() bool {
-	return c.Environment == "production"
+	return c.Environment == EnvProduction
 }
 
 func (c Config) IsTestAllRepo() bool {

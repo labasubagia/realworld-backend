@@ -35,7 +35,6 @@ func New(config util.Config, logger port.Logger) (*DB, error) {
 	if err := database.migrate(); err != nil {
 		return nil, err
 	}
-	database.logger.Info().Msg("database migration ok")
 	return database, nil
 }
 

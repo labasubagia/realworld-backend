@@ -9,14 +9,13 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
-const DefaultRepoKey = "default"
-
 type FnNew func(util.Config, port.Logger) (port.Repository, error)
 
+const DefaultType = sql.TypePostgres
+
 var FnNewMap = map[string]FnNew{
-	DefaultRepoKey: sql.NewSQLRepository,
-	"postgres":     sql.NewSQLRepository,
-	"mongo":        mongo.NewMongoRepository,
+	sql.TypePostgres: sql.NewSQLRepository,
+	mongo.TypeMongo:  mongo.NewMongoRepository,
 }
 
 func Keys() (keys []string) {
@@ -40,5 +39,5 @@ func ListRepository(config util.Config, logger port.Logger) ([]port.Repository, 
 }
 
 func NewRepository(config util.Config, logger port.Logger) (port.Repository, error) {
-	return FnNewMap[DefaultRepoKey](config, logger)
+	return FnNewMap[DefaultType](config, logger)
 }

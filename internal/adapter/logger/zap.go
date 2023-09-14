@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const TypeZap = "zap"
+
 type zapLogger struct {
 	config util.Config
 	level  zapcore.Level

@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const TypeZeroLog = "zerolog"
+
 type zeroLogLogger struct {
 	logger zerolog.Logger
 	fields map[string]any
