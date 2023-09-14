@@ -17,7 +17,7 @@ var FnNewMap = map[string]FnNew{
 	"zap":      NewZapLogger,
 }
 
-func LogKeys() (keys []string) {
+func Keys() (keys []string) {
 	for key := range FnNewMap {
 		keys = append(keys, key)
 	}

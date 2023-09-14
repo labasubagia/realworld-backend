@@ -12,16 +12,25 @@ import (
 )
 
 func init() {
-	dbOpts := []string{}
-	for option := range repository.RepoFnMap {
-		dbOpts = append(dbOpts, option)
-	}
-	dbOptStr := strings.Join(dbOpts, ",")
-
 	rootCmd.AddCommand(serverCmd)
-	serverCmd.Flags().StringP("database", "d", repository.DefaultRepoKey, fmt.Sprintf("select database in (%s)", dbOptStr))
-	serverCmd.Flags().IntP("port", "p", config.HTTPServerPort, "server port")
-	serverCmd.Flags().StringP("log", "l", logger.DefaultKey, fmt.Sprintf("log type in (%s)", strings.Join(logger.LogKeys(), ",")))
+	serverCmd.Flags().IntP(
+		"port",
+		"p",
+		config.HTTPServerPort,
+		"server port number",
+	)
+	serverCmd.Flags().StringP(
+		"database",
+		"d",
+		repository.DefaultRepoKey,
+		fmt.Sprintf("database type in (%s)", strings.Join(repository.Keys(), ", ")),
+	)
+	serverCmd.Flags().StringP(
+		"log",
+		"l",
+		logger.DefaultKey,
+		fmt.Sprintf("log type in (%s)", strings.Join(logger.Keys(), ",")),
+	)
 }
 
 var serverCmd = &cobra.Command{
@@ -45,7 +54,7 @@ var serverCmd = &cobra.Command{
 		}
 		dbType = strings.ToLower(dbType)
 
-		newRepo, exist := repository.RepoFnMap[dbType]
+		newRepo, exist := repository.FnNewMap[dbType]
 		if !exist {
 			fmt.Println()
 			log.Fatal().Err(err).Msg("failed to get flag port")

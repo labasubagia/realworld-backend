@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sort"
+
 	"github.com/labasubagia/realworld-backend/internal/adapter/repository/mongo"
 	"github.com/labasubagia/realworld-backend/internal/adapter/repository/sql"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
@@ -9,17 +11,25 @@ import (
 
 const DefaultRepoKey = "default"
 
-type FnNewRepo func(util.Config, port.Logger) (port.Repository, error)
+type FnNew func(util.Config, port.Logger) (port.Repository, error)
 
-var RepoFnMap = map[string]FnNewRepo{
+var FnNewMap = map[string]FnNew{
 	DefaultRepoKey: sql.NewSQLRepository,
 	"postgres":     sql.NewSQLRepository,
 	"mongo":        mongo.NewMongoRepository,
 }
 
+func Keys() (keys []string) {
+	for key := range FnNewMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return
+}
+
 func ListRepository(config util.Config, logger port.Logger) ([]port.Repository, error) {
 	repos := []port.Repository{}
-	for _, fn := range RepoFnMap {
+	for _, fn := range FnNewMap {
 		repo, err := fn(config, logger)
 		if err != nil {
 			return []port.Repository{}, err
@@ -30,5 +40,5 @@ func ListRepository(config util.Config, logger port.Logger) ([]port.Repository, 
 }
 
 func NewRepository(config util.Config, logger port.Logger) (port.Repository, error) {
-	return RepoFnMap[DefaultRepoKey](config, logger)
+	return FnNewMap[DefaultRepoKey](config, logger)
 }
