@@ -39,8 +39,6 @@ func (s *userService) Register(ctx context.Context, req port.RegisterParams) (us
 }
 
 func (s *userService) Login(ctx context.Context, req port.LoginParams) (user domain.User, err error) {
-	subLogger, _ := ctx.Value(port.LoggerCtxKey).(port.Logger)
-	subLogger.Info().Msg("func login")
 
 	existing, err := s.property.repo.User().FilterUser(ctx, port.FilterUserPayload{Emails: []string{req.User.Email}})
 	if err != nil {
