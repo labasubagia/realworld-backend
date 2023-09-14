@@ -68,7 +68,7 @@ func (e *zeroLogEvent) Field(key string, value any) port.LogEvent {
 }
 
 func (e *zeroLogEvent) Msg(v ...any) {
-	msg := fmt.Sprintln(v...)
+	msg := fmt.Sprint(v...)
 	e.event.Msg(msg)
 }
 

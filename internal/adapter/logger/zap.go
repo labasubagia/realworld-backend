@@ -73,7 +73,7 @@ func (e *zapEvent) Field(key string, value any) port.LogEvent {
 }
 
 func (e *zapEvent) Msg(v ...any) {
-	msg := fmt.Sprintln(v...)
+	msg := fmt.Sprint(v...)
 	e.send(msg)
 }
 
