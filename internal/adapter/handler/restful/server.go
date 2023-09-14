@@ -86,6 +86,7 @@ func (server *Server) Start() error {
 	}
 
 	go func() {
+		server.logger.Info().Msg("listen to port", server.config.HTTPServerPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			server.logger.Fatal().Err(err).Msg("failed listen")
 		}
