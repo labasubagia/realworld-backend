@@ -23,61 +23,82 @@ func NewZapLogger(config util.Config) port.Logger {
 	}
 }
 
-// Log Level
-
-func (l *zapLogger) Info() port.Logger {
-	l.level = zap.InfoLevel
-	return l
-}
-
-func (l *zapLogger) Error() port.Logger {
-	l.level = zapcore.ErrorLevel
-	return l
-}
-
-func (l *zapLogger) Fatal() port.Logger {
-	l.level = zap.PanicLevel
-	return l
-}
-
-// Set Attributes
-
 func (l *zapLogger) Field(key string, value any) port.Logger {
 	l.fields[key] = value
 	return l
 }
 
-func (l *zapLogger) Err(err error) port.Logger {
-	if err != nil {
-		return l
-	}
-	l.fields["error"] = err.Error()
+func (l *zapLogger) Logger() port.Logger {
 	return l
 }
 
-// Send
+func (l *zapLogger) Info() port.LogEvent {
+	l.level = zap.InfoLevel
+	return newZapEvent(l)
+}
 
-func (l *zapLogger) Msg(v ...any) {
+func (l *zapLogger) Error() port.LogEvent {
+	l.level = zapcore.ErrorLevel
+	return newZapEvent(l)
+}
+
+func (l *zapLogger) Fatal() port.LogEvent {
+	l.level = zap.PanicLevel
+	return newZapEvent(l)
+}
+
+type zapEvent struct {
+	opt    *zapLogger
+	fields map[string]any
+}
+
+func newZapEvent(opt *zapLogger) port.LogEvent {
+	return &zapEvent{
+		opt:    opt,
+		fields: map[string]any{},
+	}
+}
+
+func (e *zapEvent) Err(err error) port.LogEvent {
+	if err != nil {
+		return e
+	}
+	e.fields["error"] = err.Error()
+	return e
+}
+
+func (e *zapEvent) Field(key string, value any) port.LogEvent {
+	e.fields[key] = value
+	return e
+}
+
+func (e *zapEvent) Msg(v ...any) {
 	msg := fmt.Sprintln(v...)
-	l.send(msg)
+	e.send(msg)
 }
 
-func (l *zapLogger) Msgf(format string, v ...any) {
+func (e *zapEvent) Msgf(format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
-	l.send(msg)
+	e.send(msg)
 }
 
-func (l *zapLogger) send(msg string) {
+func (e *zapEvent) send(msg string) {
 	config := zap.NewProductionConfig()
-	if !l.config.IsProduction() {
+	if !e.opt.config.IsProduction() {
 		config = zap.NewDevelopmentConfig()
 	}
-	config.InitialFields = l.fields
+
+	for k, v := range e.opt.fields {
+		e.fields[k] = v
+	}
+	e.opt.fields = map[string]any{}
+	config.InitialFields = e.fields
+
 	logger, _ := config.Build()
 	defer func() {
 		logger.Sync()
-		l.fields = map[string]any{}
+		e.fields = map[string]any{}
 	}()
-	stdLogger, _ := zap.NewStdLogAt(logger, l.level)
+	stdLogger, _ := zap.NewStdLogAt(logger, e.opt.level)
 	stdLogger.Println(msg)
 }

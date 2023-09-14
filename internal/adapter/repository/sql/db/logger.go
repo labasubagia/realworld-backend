@@ -28,11 +28,12 @@ func (h *LoggerHook) AfterQuery(ctx context.Context, event *bun.QueryEvent) {
 	now := time.Now()
 	duration := now.Sub(event.StartTime)
 
-	logger := h.logger.Info()
+	subLogger, _ := ctx.Value(port.LoggerCtxKey).(port.Logger)
+	logEvent := subLogger.Info()
 	if event.Err != nil {
-		logger = h.logger.Error().Err(event.Err)
+		logEvent = subLogger.Error().Err(event.Err)
 	}
-	logger.
+	logEvent.
 		Field("duration", duration).
 		Field("query", event.Query).
 		Msgf("SQL %s", event.Operation())

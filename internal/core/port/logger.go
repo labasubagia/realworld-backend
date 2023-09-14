@@ -1,17 +1,20 @@
 package port
 
+const LoggerCtxKey = "logger_key"
+
 type Logger interface {
-	// Level
-	// ? just limit to 2
-	Info() Logger
-	Error() Logger
-	Fatal() Logger
-	Err(error) Logger
-
-	// set attributes
 	Field(string, any) Logger
+	Logger() Logger
 
-	// send
+	Info() LogEvent
+	Error() LogEvent
+	Fatal() LogEvent
+}
+
+type LogEvent interface {
+	Field(string, any) LogEvent
+	Err(error) LogEvent
+
 	Msgf(string, ...any)
 	Msg(...any)
 }

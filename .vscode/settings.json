@@ -18,6 +18,7 @@
         "pgdialect",
         "pgxpool",
         "realworld",
+        "requestid",
         "sslmode",
         "stdlib",
         "stretchr",

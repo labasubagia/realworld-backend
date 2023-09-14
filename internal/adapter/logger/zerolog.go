@@ -11,8 +11,8 @@ import (
 )
 
 type zeroLogLogger struct {
-	log   zerolog.Logger
-	event *zerolog.Event
+	logger zerolog.Logger
+	fields map[string]any
 }
 
 func NewZeroLogLogger(config util.Config) port.Logger {
@@ -22,46 +22,57 @@ func NewZeroLogLogger(config util.Config) port.Logger {
 		logger = zerolog.New(output).With().Timestamp().Logger()
 	}
 	return &zeroLogLogger{
-		log:   logger,
-		event: logger.Info(),
+		logger: logger,
+		fields: map[string]any{},
 	}
 }
 
-// Log Level
-
-func (l *zeroLogLogger) Info() port.Logger {
-	l.event = l.log.Info()
-	return l
-}
-
-func (l *zeroLogLogger) Error() port.Logger {
-	l.event = l.log.Error()
-	return l
-}
-
-func (l *zeroLogLogger) Fatal() port.Logger {
-	l.event = l.log.Fatal()
-	return l
-}
-
-// Set Attributes
-
-func (l *zeroLogLogger) Err(err error) port.Logger {
-	l.event = l.event.Err(err)
-	return l
-}
-
 func (l *zeroLogLogger) Field(key string, value any) port.Logger {
-	l.event = l.event.Any(key, value)
+	l.fields[key] = value
 	return l
 }
 
-// Send
-
-func (l *zeroLogLogger) Msg(v ...any) {
-	l.event.Msg(fmt.Sprint(v...))
+func (l *zeroLogLogger) Logger() port.Logger {
+	return l
 }
 
-func (l *zeroLogLogger) Msgf(format string, v ...any) {
-	l.event.Msgf(format, v...)
+func (l *zeroLogLogger) Info() port.LogEvent {
+	return newZeroLogEvent(l.fields, l.logger.Info())
+}
+
+func (l *zeroLogLogger) Error() port.LogEvent {
+	return newZeroLogEvent(l.fields, l.logger.Error())
+}
+
+func (l *zeroLogLogger) Fatal() port.LogEvent {
+	return newZeroLogEvent(l.fields, l.logger.Fatal())
+}
+
+type zeroLogEvent struct {
+	event *zerolog.Event
+}
+
+func newZeroLogEvent(initialFields map[string]any, event *zerolog.Event) port.LogEvent {
+	event.Fields(initialFields)
+	return &zeroLogEvent{event: event}
+}
+
+func (e *zeroLogEvent) Err(err error) port.LogEvent {
+	e.event.Err(err)
+	return e
+}
+
+func (e *zeroLogEvent) Field(key string, value any) port.LogEvent {
+	e.event.Any(key, value)
+	return e
+}
+
+func (e *zeroLogEvent) Msg(v ...any) {
+	msg := fmt.Sprintln(v...)
+	e.event.Msg(msg)
+}
+
+func (e *zeroLogEvent) Msgf(format string, v ...any) {
+	msg := fmt.Sprintf(format, v...)
+	e.event.Msg(msg)
 }
