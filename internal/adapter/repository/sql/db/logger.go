@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/labasubagia/realworld-backend/internal/core/port"
@@ -35,6 +36,6 @@ func (h *LoggerHook) AfterQuery(ctx context.Context, event *bun.QueryEvent) {
 	}
 	logEvent.
 		Field("duration", duration).
-		Field("query", event.Query).
+		Field("query", strings.ReplaceAll(event.Query, "\"", "")).
 		Msgf("SQL %s", event.Operation())
 }
