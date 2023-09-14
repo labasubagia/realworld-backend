@@ -1,6 +1,10 @@
 package port
 
-const LoggerCtxKey = "logger_key"
+import (
+	"context"
+)
+
+const SubLoggerCtxKey = "logger_key"
 
 type Logger interface {
 	Field(string, any) Logger
@@ -17,4 +21,11 @@ type LogEvent interface {
 
 	Msgf(string, ...any)
 	Msg(...any)
+}
+
+func GetCtxSubLogger(ctx context.Context, defaultLogger Logger) Logger {
+	if subLogger, ok := ctx.Value(SubLoggerCtxKey).(Logger); ok {
+		return subLogger
+	}
+	return defaultLogger
 }
