@@ -2,9 +2,12 @@ package mongo
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -22,16 +25,36 @@ const (
 
 type DB struct {
 	client *mongo.Client
+	logger port.Logger
 }
 
-func NewDB(config util.Config) (DB, error) {
+func NewDB(config util.Config, logger port.Logger) (DB, error) {
+
 	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoSource))
+	clientOpts := options.Client().ApplyURI(config.MongoSource)
+	if !config.IsProduction() {
+		cmdMonitor := &event.CommandMonitor{
+			Started: func(ctx context.Context, event *event.CommandStartedEvent) {
+				var query any
+				json.Unmarshal([]byte(event.Command.String()), &query)
+				subLogger := port.GetCtxSubLogger(ctx, logger)
+				subLogger.Info().
+					Field("query", query).
+					Field("command", event.CommandName).
+					Field("db", event.DatabaseName).
+					Msg("Mongo Command")
+
+			},
+		}
+		clientOpts.SetMonitor(cmdMonitor)
+	}
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
 		return DB{}, err
 	}
 	db := DB{
 		client: client,
+		logger: logger,
 	}
 	if err := db.migrate(); err != nil {
 		return DB{}, err

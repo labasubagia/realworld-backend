@@ -18,7 +18,7 @@ type mongoRepo struct {
 }
 
 func NewMongoRepository(config util.Config, logger port.Logger) (port.Repository, error) {
-	db, err := NewDB(config)
+	db, err := NewDB(config, logger)
 	if err != nil {
 		return nil, err
 	}
