@@ -16,6 +16,20 @@
             ]
         },
         {
+            "name": "Run Server Prod",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "ENVIRONMENT": "production"
+            },
+            "args": [
+                "server",
+            ]
+        },
+        {
             "name": "Run Server (Postgres)",
             "type": "go",
             "request": "launch",
