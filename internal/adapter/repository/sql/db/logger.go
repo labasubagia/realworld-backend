@@ -28,11 +28,7 @@ func (h *LoggerHook) AfterQuery(ctx context.Context, event *bun.QueryEvent) {
 	now := time.Now()
 	duration := now.Sub(event.StartTime)
 
-	subLogger, ok := ctx.Value(port.LoggerCtxKey).(port.Logger)
-	if !ok {
-		subLogger = h.logger
-	}
-
+	subLogger := port.GetCtxSubLogger(ctx, h.logger)
 	logEvent := subLogger.Info()
 	if event.Err != nil {
 		logEvent = subLogger.Error().Err(event.Err)

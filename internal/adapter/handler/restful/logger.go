@@ -21,7 +21,7 @@ func (s *Server) Logger() gin.HandlerFunc {
 
 		// make logger and sub-logger
 		logger := s.logger.Field("request_id", reqID).Logger()
-		c.Set(port.LoggerCtxKey, logger)
+		c.Set(port.SubLoggerCtxKey, logger)
 
 		// process request
 		startTime := time.Now()
