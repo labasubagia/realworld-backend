@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -10,22 +10,24 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/labasubagia/realworld-backend/internal/adapter/repository/sql/db/migration"
+	"github.com/labasubagia/realworld-backend/internal/core/port"
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/extra/bundebug"
 	bunMigrate "github.com/uptrace/bun/migrate"
 )
 
 type DB struct {
 	config util.Config
+	logger port.Logger
 	db     *bun.DB
 }
 
-func New(config util.Config) (*DB, error) {
+func New(config util.Config, logger port.Logger) (*DB, error) {
 	var err error
 	database := &DB{
 		config: config,
+		logger: logger,
 	}
 	if database.db, err = database.connect(); err != nil {
 		return nil, err
@@ -47,21 +49,23 @@ func (db *DB) connect() (*bun.DB, error) {
 	}
 	sqlDB := stdlib.OpenDB(*config)
 	database := bun.NewDB(sqlDB, pgdialect.New())
-	database.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+
+	// log
+	if !db.config.IsProduction() {
+		// database.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+		database.AddQueryHook(&LoggerHook{verbose: true, logger: db.logger})
+	}
 	return database, nil
 }
 
 func (db *DB) migrate() error {
 	migration, err := migrate.New(db.config.PostgresMigrationURL, db.config.PostgresSource)
 	if err != nil {
-		log.Printf("cannot create new migration instance: %s", err)
-		return err
+		return fmt.Errorf("cannot create new migration instance: %s", err)
 	}
 	if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Printf("failed to run migrate: %s", err)
-		return err
+		return fmt.Errorf("failed to run migrate: %s", err)
 	}
-	log.Println("migration ok")
 	return nil
 }
 
@@ -82,9 +86,7 @@ func (db *DB) migrateBun() error {
 		return err
 	}
 	if group.IsZero() {
-		log.Printf("there are no new migrations to run (database is up to date)\n")
 		return nil
 	}
-	log.Printf("migrated to %s\n", group)
 	return nil
 }

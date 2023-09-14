@@ -3,7 +3,6 @@ package restful
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,12 +19,14 @@ type Server struct {
 	config  util.Config
 	router  *gin.Engine
 	service port.Service
+	logger  port.Logger
 }
 
-func NewServer(config util.Config, service port.Service) port.Server {
+func NewServer(config util.Config, service port.Service, logger port.Logger) port.Server {
 	server := &Server{
 		config:  config,
 		service: service,
+		logger:  logger,
 	}
 	server.setupRouter()
 	return server
@@ -33,8 +34,9 @@ func NewServer(config util.Config, service port.Service) port.Server {
 
 func (server *Server) setupRouter() {
 
-	router := gin.Default()
-	router.Use(cors.Default())
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(server.Logger(), gin.Recovery(), cors.Default())
 
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
@@ -85,27 +87,27 @@ func (server *Server) Start() error {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			server.logger.Fatal().Err(err).Msg("failed listen")
 		}
 	}()
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Printf("Shutdown server...")
+	server.logger.Info().Msg("shutdown server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server shutdown:", err)
+		server.logger.Fatal().Err(err).Msg("failed shutdown server")
 	}
 
 	select {
 	case <-ctx.Done():
-		log.Println("timeout of 5 seconds")
+		server.logger.Info().Msg("timeout in 5 seconds")
 	}
-	log.Println("Server existing")
+	server.logger.Info().Msg("server exiting")
 
 	return nil
 }

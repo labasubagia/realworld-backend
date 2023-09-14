@@ -5,6 +5,8 @@ import (
 )
 
 type Config struct {
+	Environment string `mapstructure:"ENVIRONMENT"`
+
 	PostgresSource       string `mapstructure:"POSTGRES_SOURCE"`
 	PostgresMigrationURL string `mapstructure:"POSTGRES_MIGRATION_URL"`
 
@@ -15,6 +17,10 @@ type Config struct {
 	TokenSymmetricKey string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 
 	TestRepo string `mapstructure:"TEST_REPO"`
+}
+
+func (c Config) IsProduction() bool {
+	return c.Environment == "production"
 }
 
 func (c Config) IsTestAllRepo() bool {

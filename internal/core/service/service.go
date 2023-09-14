@@ -10,6 +10,7 @@ type serviceProperty struct {
 	config     util.Config
 	tokenMaker token.Maker
 	repo       port.Repository
+	logger     port.Logger
 }
 
 type services struct {
@@ -18,7 +19,7 @@ type services struct {
 	userService    port.UserService
 }
 
-func NewService(config util.Config, repo port.Repository) (port.Service, error) {
+func NewService(config util.Config, repo port.Repository, logger port.Logger) (port.Service, error) {
 	tokenMaker, err := token.NewJWTMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, err
@@ -27,6 +28,7 @@ func NewService(config util.Config, repo port.Repository) (port.Service, error) 
 		config:     config,
 		repo:       repo,
 		tokenMaker: tokenMaker,
+		logger:     logger,
 	}
 	svc := services{
 		property:       property,

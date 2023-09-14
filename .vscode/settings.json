@@ -10,6 +10,7 @@
         "jackc",
         "labasubagia",
         "mapstructure",
+        "Msgf",
         "notnull",
         "nullzero",
         "oklog",
@@ -22,7 +23,8 @@
         "stretchr",
         "Upsert",
         "uptrace",
-        "writeconcern"
+        "writeconcern",
+        "zerolog"
     ],
     "go.testFlags": [
         "-count=1"

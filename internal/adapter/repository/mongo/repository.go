@@ -12,19 +12,20 @@ import (
 
 type mongoRepo struct {
 	db          DB
+	logger      port.Logger
 	userRepo    port.UserRepository
 	articleRepo port.ArticleRepository
 }
 
-func NewMongoRepository(config util.Config) (port.Repository, error) {
+func NewMongoRepository(config util.Config, logger port.Logger) (port.Repository, error) {
 	db, err := NewDB(config)
 	if err != nil {
 		return nil, err
 	}
-	return create(db), nil
+	return create(db, logger), nil
 }
 
-func create(db DB) port.Repository {
+func create(db DB, logger port.Logger) port.Repository {
 	return &mongoRepo{
 		db:          db,
 		userRepo:    NewUserRepository(db),
@@ -43,7 +44,7 @@ func (r *mongoRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback
 	defer session.EndSession(ctx)
 
 	_, err = session.WithTransaction(ctx, func(sessionCtx mongo.SessionContext) (any, error) {
-		if err := fn(create(r.db)); err != nil {
+		if err := fn(create(r.db, r.logger)); err != nil {
 			return nil, intoException(err)
 		}
 		return nil, nil

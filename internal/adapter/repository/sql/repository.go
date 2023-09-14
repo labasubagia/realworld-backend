@@ -12,16 +12,17 @@ import (
 
 type sqlRepo struct {
 	db          bun.IDB
+	logger      port.Logger
 	userRepo    port.UserRepository
 	articleRepo port.ArticleRepository
 }
 
-func NewSQLRepository(config util.Config) (port.Repository, error) {
-	db, err := db.New(config)
+func NewSQLRepository(config util.Config, logger port.Logger) (port.Repository, error) {
+	db, err := db.New(config, logger)
 	if err != nil {
 		return nil, err
 	}
-	return create(db.DB()), nil
+	return create(db.DB(), logger), nil
 }
 
 func (r *sqlRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) error {
@@ -29,7 +30,7 @@ func (r *sqlRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) 
 		ctx,
 		&sql.TxOptions{Isolation: sql.LevelSerializable},
 		func(ctx context.Context, tx bun.Tx) error {
-			return fn(create(tx))
+			return fn(create(tx, r.logger))
 		},
 	)
 	if err != nil {
@@ -38,9 +39,10 @@ func (r *sqlRepo) Atomic(ctx context.Context, fn port.RepositoryAtomicCallback) 
 	return nil
 }
 
-func create(db bun.IDB) port.Repository {
+func create(db bun.IDB, logger port.Logger) port.Repository {
 	return &sqlRepo{
 		db:          db,
+		logger:      logger,
 		userRepo:    NewUserRepository(db),
 		articleRepo: NewArticleRepository(db),
 	}

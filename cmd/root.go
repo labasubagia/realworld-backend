@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 	"github.com/spf13/cobra"
@@ -20,7 +21,8 @@ func init() {
 
 	config, err = util.LoadConfig(".env")
 	if err != nil {
-		log.Fatal("failed to load env config", err)
+		fmt.Fprintf(os.Stderr, "failed to load env config: %s", err)
+		os.Exit(1)
 	}
 }
 

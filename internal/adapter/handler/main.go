@@ -6,6 +6,6 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
-func NewServer(config util.Config, service port.Service) port.Server {
-	return restful.NewServer(config, service)
+func NewServer(config util.Config, service port.Service, logger port.Logger) port.Server {
+	return restful.NewServer(config, service, logger)
 }

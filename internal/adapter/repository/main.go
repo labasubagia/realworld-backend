@@ -9,7 +9,7 @@ import (
 
 const DefaultRepoKey = "default"
 
-type FnNewRepo func(util.Config) (port.Repository, error)
+type FnNewRepo func(util.Config, port.Logger) (port.Repository, error)
 
 var RepoFnMap = map[string]FnNewRepo{
 	DefaultRepoKey: sql.NewSQLRepository,
@@ -17,10 +17,10 @@ var RepoFnMap = map[string]FnNewRepo{
 	"mongo":        mongo.NewMongoRepository,
 }
 
-func ListRepository(config util.Config) ([]port.Repository, error) {
+func ListRepository(config util.Config, logger port.Logger) ([]port.Repository, error) {
 	repos := []port.Repository{}
 	for _, fn := range RepoFnMap {
-		repo, err := fn(config)
+		repo, err := fn(config, logger)
 		if err != nil {
 			return []port.Repository{}, err
 		}
@@ -29,6 +29,6 @@ func ListRepository(config util.Config) ([]port.Repository, error) {
 	return repos, nil
 }
 
-func NewRepository(config util.Config) (port.Repository, error) {
-	return RepoFnMap[DefaultRepoKey](config)
+func NewRepository(config util.Config, logger port.Logger) (port.Repository, error) {
+	return RepoFnMap[DefaultRepoKey](config, logger)
 }

@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/labasubagia/realworld-backend/internal/adapter/handler/restful"
+	"github.com/labasubagia/realworld-backend/internal/adapter/logger"
 	"github.com/labasubagia/realworld-backend/internal/adapter/repository"
 	"github.com/labasubagia/realworld-backend/internal/core/service"
 	"github.com/spf13/cobra"
@@ -29,35 +29,39 @@ var serverCmd = &cobra.Command{
 	Long:  "Run gin server restful API",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		logger := logger.NewLogger(config)
+
 		port, err := cmd.Flags().GetInt("port")
 		if err != nil {
-			log.Fatal("failed get port flag", err)
+			logger.Fatal().Err(err).Msg("failed to get flag port")
 		}
 		config.HTTPServerPort = port
 
 		dbType, err := cmd.Flags().GetString("database")
 		if err != nil {
-			log.Fatal("failed get database flag", err)
+			logger.Fatal().Err(err).Msg("failed to get flag database")
 		}
 		dbType = strings.ToLower(dbType)
 
 		newRepo, exist := repository.RepoFnMap[dbType]
 		if !exist {
-			log.Fatal("invalid database", dbType)
+			fmt.Println()
+			logger.Fatal().Err(err).Msg("failed to get flag port")
 		}
 
-		repo, err := newRepo(config)
+		repo, err := newRepo(config, logger)
 		if err != nil {
-			log.Fatal("failed to load repository", err)
+			logger.Fatal().Err(err).Msg("failed to load repository")
 		}
-		service, err := service.NewService(config, repo)
-		if err != nil {
-			log.Fatal("failed to load service", err)
-		}
-		server := restful.NewServer(config, service)
 
+		service, err := service.NewService(config, repo, logger)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to load service")
+		}
+
+		server := restful.NewServer(config, service, logger)
 		if server.Start(); err != nil {
-			log.Fatal("failed to load server", err)
+			logger.Fatal().Err(err).Msg("failed to load service")
 		}
 	},
 }

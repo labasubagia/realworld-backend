@@ -10,9 +10,9 @@ const (
 	authorizationArgKey    = "authorization_arg"
 )
 
-func (s *Server) AuthMiddleware(autoDenied bool) gin.HandlerFunc {
+func (server *Server) AuthMiddleware(autoDenied bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authArg, err := s.parseToken(c)
+		authArg, err := server.parseToken(c)
 		if err != nil {
 			if autoDenied {
 				errorHandler(c, err)
