@@ -21,6 +21,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().StringP("database", "d", repository.DefaultRepoKey, fmt.Sprintf("select database in (%s)", dbOptStr))
 	serverCmd.Flags().IntP("port", "p", config.HTTPServerPort, "server port")
+	serverCmd.Flags().StringP("log", "l", logger.DefaultKey, fmt.Sprintf("log type in (%s)", strings.Join(logger.LogKeys(), ",")))
 }
 
 var serverCmd = &cobra.Command{
@@ -29,39 +30,40 @@ var serverCmd = &cobra.Command{
 	Long:  "Run gin server restful API",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		logger := logger.NewLogger(config)
+		logType := cmd.Flag("log").Value.String()
+		log := logger.FnNewMap[logType](config)
 
 		port, err := cmd.Flags().GetInt("port")
 		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to get flag port")
+			log.Fatal().Err(err).Msg("failed to get flag port")
 		}
 		config.HTTPServerPort = port
 
 		dbType, err := cmd.Flags().GetString("database")
 		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to get flag database")
+			log.Fatal().Err(err).Msg("failed to get flag database")
 		}
 		dbType = strings.ToLower(dbType)
 
 		newRepo, exist := repository.RepoFnMap[dbType]
 		if !exist {
 			fmt.Println()
-			logger.Fatal().Err(err).Msg("failed to get flag port")
+			log.Fatal().Err(err).Msg("failed to get flag port")
 		}
 
-		repo, err := newRepo(config, logger)
+		repo, err := newRepo(config, log)
 		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to load repository")
+			log.Fatal().Err(err).Msg("failed to load repository")
 		}
 
-		service, err := service.NewService(config, repo, logger)
+		service, err := service.NewService(config, repo, log)
 		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to load service")
+			log.Fatal().Err(err).Msg("failed to load service")
 		}
 
-		server := restful.NewServer(config, service, logger)
+		server := restful.NewServer(config, service, log)
 		if server.Start(); err != nil {
-			logger.Fatal().Err(err).Msg("failed to load service")
+			log.Fatal().Err(err).Msg("failed to load service")
 		}
 	},
 }
