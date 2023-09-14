@@ -38,3 +38,5 @@ yarn-error.log*
 # go
 __debug_bin*
 realworld-backend
+coverage.html
+coverage.profile

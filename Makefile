@@ -17,5 +17,9 @@ test_all:
 	export TEST_REPO=all
 	make test
 
+test_cover:
+	go test -coverprofile=coverage.profile -cover ./...
+	go tool cover -html coverage.profile -o coverage.html
+
 e2e:
 	APIURL=http://0.0.0.0:5000 ./tests/run-api-tests.sh
