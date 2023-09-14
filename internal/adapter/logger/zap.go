@@ -74,7 +74,10 @@ func (l *zapLogger) send(msg string) {
 	}
 	config.InitialFields = l.fields
 	logger, _ := config.Build()
-	defer logger.Sync()
+	defer func() {
+		logger.Sync()
+		l.fields = map[string]any{}
+	}()
 	stdLogger, _ := zap.NewStdLogAt(logger, l.level)
 	stdLogger.Println(msg)
 }
