@@ -44,6 +44,8 @@ func (s *Server) Logger() gin.HandlerFunc {
 		}
 		logEvent.
 			Field("protocol", "http").
+			Field("client_ip", c.ClientIP()).
+			Field("user_agent", c.Request.UserAgent()).
 			Field("method", c.Request.Method).
 			Field("path", c.Request.URL.Path).
 			Field("status_code", c.Writer.Status()).
