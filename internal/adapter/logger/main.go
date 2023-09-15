@@ -7,17 +7,15 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
-type FnNew func(util.Config) port.Logger
+const defaultType = TypeZeroLog
 
-const DefaultType = TypeZeroLog
-
-var FnNewMap = map[string]FnNew{
+var fnNewMap = map[string]func(util.Config) port.Logger{
 	TypeZeroLog: NewZeroLogLogger,
 	TypeZap:     NewZapLogger,
 }
 
 func Keys() (keys []string) {
-	for key := range FnNewMap {
+	for key := range fnNewMap {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
@@ -25,9 +23,9 @@ func Keys() (keys []string) {
 }
 
 func NewLogger(config util.Config) port.Logger {
-	new, ok := FnNewMap[config.LogType]
+	new, ok := fnNewMap[config.LogType]
 	if ok {
 		return new(config)
 	}
-	return FnNewMap[DefaultType](config)
+	return fnNewMap[defaultType](config)
 }
