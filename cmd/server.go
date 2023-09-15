@@ -52,23 +52,16 @@ var serverCmd = &cobra.Command{
 		logger := logger.NewLogger(config)
 		logger.Info().Msgf("use logger %s", config.LogType)
 
-		// db
+		// repository
 		dbType, err := cmd.Flags().GetString("database")
-		if err != nil {
-			logger.Fatal().Err(err).Msg("failed get log type flag")
+		if err == nil {
+			config.DBType = strings.ToLower(dbType)
 		}
-		dbType = strings.ToLower(dbType)
-		newRepo, ok := repository.FnNewMap[dbType]
-		if !ok {
-			dbType = repository.DefaultType
-			newRepo = repository.NewRepository
-		}
-		logger.Info().Msgf("use database %s", dbType)
-
-		repo, err := newRepo(config, logger)
+		repo, err := repository.NewRepository(config, logger)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("failed to load repository")
 		}
+		logger.Info().Msgf("use repository %s", config.DBType)
 
 		service, err := service.NewService(config, repo, logger)
 		if err != nil {

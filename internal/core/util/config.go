@@ -19,6 +19,7 @@ type Config struct {
 
 	HTTPServerPort int    `mapstructure:"HTTP_SERVER_PORT"`
 	LogType        string `mapstructure:"LOG_TYPE"`
+	DBType         string `mapstructure:"DB_TYPE"`
 
 	TokenSymmetricKey string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 

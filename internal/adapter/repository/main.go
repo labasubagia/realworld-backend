@@ -39,5 +39,9 @@ func ListRepository(config util.Config, logger port.Logger) ([]port.Repository, 
 }
 
 func NewRepository(config util.Config, logger port.Logger) (port.Repository, error) {
+	new, ok := FnNewMap[config.DBType]
+	if ok {
+		return new(config, logger)
+	}
 	return FnNewMap[DefaultType](config, logger)
 }
