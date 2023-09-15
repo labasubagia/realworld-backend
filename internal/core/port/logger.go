@@ -4,7 +4,8 @@ import (
 	"context"
 )
 
-const SubLoggerCtxKey = "logger_key"
+// set context value with this key
+const SubLoggerCtxKey = "sub_logger"
 
 type Logger interface {
 	Field(string, any) Logger
