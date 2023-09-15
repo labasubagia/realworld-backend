@@ -36,7 +36,15 @@ func (server *Server) setupRouter() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
+
 	router.Use(server.Logger(), gin.Recovery(), cors.Default())
+
+	router.NoRoute(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusNotFound, gin.H{"message": "page not found"})
+	})
+	router.NoMethod(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusMethodNotAllowed, gin.H{"message": "no method provided"})
+	})
 
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
@@ -64,10 +72,10 @@ func (server *Server) setupRouter() {
 	articleRouter.PUT("/:slug", server.UpdateArticle)
 	articleRouter.DELETE("/:slug", server.DeleteArticle)
 
-	commentRouter := articleRouter.Group("/:slug")
-	commentRouter.POST("/comments", server.AddComment)
-	commentRouter.GET("/comments", server.ListComments)
-	commentRouter.DELETE("/comments/:comment_id", server.DeleteComment)
+	commentRouter := articleRouter.Group("/:slug/comments")
+	commentRouter.POST("/", server.AddComment)
+	commentRouter.GET("/", server.ListComments)
+	commentRouter.DELETE("/:comment_id", server.DeleteComment)
 
 	favoriteArticleRouter := articleRouter.Group("/:slug/favorite")
 	favoriteArticleRouter.POST("/", server.AddFavoriteArticle)
