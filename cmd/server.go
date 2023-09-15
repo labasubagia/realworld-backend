@@ -12,18 +12,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	dbTypeStr  = strings.Join(repository.Keys(), ", ")
-	logTypeStr = strings.Join(logger.Keys(), ", ")
-)
-
 func init() {
+	dbTypeStr := strings.Join(repository.Keys(), ", ")
+	logTypeStr := strings.Join(logger.Keys(), ", ")
+
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().Bool("prod", false, "use for production")
-	serverCmd.Flags().IntP("port", "p", config.HTTPServerPort, "server port number")
-	serverCmd.Flags().StringP("database", "d", repository.DefaultType, fmt.Sprintf("database type in (%s)", dbTypeStr))
-	serverCmd.Flags().StringP("log", "l", logger.DefaultType, fmt.Sprintf("log type in (%s)", logTypeStr))
+	serverCmd.Flags().IntVarP(&config.HTTPServerPort, "port", "p", config.HTTPServerPort, "server port number")
+	serverCmd.Flags().StringVarP(&config.DBType, "database", "d", repository.DefaultType, fmt.Sprintf("database type in (%s)", dbTypeStr))
+	serverCmd.Flags().StringVarP(&config.LogType, "log", "l", logger.DefaultType, fmt.Sprintf("log type in (%s)", logTypeStr))
 }
 
 var serverCmd = &cobra.Command{
@@ -36,18 +34,6 @@ var serverCmd = &cobra.Command{
 		isProduction, err := cmd.Flags().GetBool("prod")
 		if err == nil && isProduction {
 			config.Environment = util.EnvProduction
-		}
-
-		// port
-		port, err := cmd.Flags().GetInt("port")
-		if err == nil {
-			config.HTTPServerPort = port
-		}
-
-		// logger
-		logType, err := cmd.Flags().GetString("log")
-		if err == nil {
-			config.LogType = logType
 		}
 		logger := logger.NewLogger(config)
 		logger.Info().Msgf("use logger %s", config.LogType)
