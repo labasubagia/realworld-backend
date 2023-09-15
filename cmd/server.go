@@ -39,10 +39,6 @@ var serverCmd = &cobra.Command{
 		logger.Info().Msgf("use logger %s", config.LogType)
 
 		// repository
-		dbType, err := cmd.Flags().GetString("database")
-		if err == nil {
-			config.DBType = strings.ToLower(dbType)
-		}
 		repo, err := repository.NewRepository(config, logger)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("failed to load repository")
