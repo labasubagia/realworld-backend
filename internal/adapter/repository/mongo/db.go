@@ -38,12 +38,7 @@ func NewDB(config util.Config, logger port.Logger) (DB, error) {
 				var query any
 				json.Unmarshal([]byte(event.Command.String()), &query)
 				subLogger := port.GetCtxSubLogger(ctx, logger)
-				subLogger.Info().
-					Field("query", query).
-					Field("command", event.CommandName).
-					Field("db", event.DatabaseName).
-					Msg("Mongo Command")
-
+				subLogger.Info().Field("query", query).Msgf("mongo %s", event.CommandName)
 			},
 		}
 		clientOpts.SetMonitor(cmdMonitor)
