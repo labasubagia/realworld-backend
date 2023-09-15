@@ -21,7 +21,7 @@ func NewZapLogger(config util.Config) port.Logger {
 	return &zapLogger{
 		config: config,
 		fields: map[string]any{},
-		level:  zap.DebugLevel,
+		level:  zap.InfoLevel,
 	}
 }
 
@@ -93,7 +93,6 @@ func (e *zapEvent) send(msg string) {
 	for k, v := range e.opt.fields {
 		e.fields[k] = v
 	}
-	e.opt.fields = map[string]any{}
 	config.InitialFields = e.fields
 
 	logger, _ := config.Build()
