@@ -18,10 +18,10 @@ func init() {
 
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().Bool("prod", false, "use for production")
+	serverCmd.Flags().Bool("prod", config.IsProduction(), "use for production")
 	serverCmd.Flags().IntVarP(&config.HTTPServerPort, "port", "p", config.HTTPServerPort, "server port number")
-	serverCmd.Flags().StringVarP(&config.DBType, "database", "d", repository.DefaultType, fmt.Sprintf("database type in (%s)", dbTypeStr))
-	serverCmd.Flags().StringVarP(&config.LogType, "log", "l", logger.DefaultType, fmt.Sprintf("log type in (%s)", logTypeStr))
+	serverCmd.Flags().StringVarP(&config.DBType, "database", "d", config.DBType, fmt.Sprintf("database type in (%s)", dbTypeStr))
+	serverCmd.Flags().StringVarP(&config.LogType, "log", "l", config.LogType, fmt.Sprintf("log type in (%s)", logTypeStr))
 }
 
 var serverCmd = &cobra.Command{
