@@ -6,6 +6,10 @@ import (
 
 type ID string
 
+func (id ID) String() string {
+	return string(id)
+}
+
 func NewID() ID {
 	return ID(ulid.Make().String())
 }

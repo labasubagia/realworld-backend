@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/labasubagia/realworld-backend/internal/adapter/handler/restful"
@@ -47,17 +46,11 @@ var serverCmd = &cobra.Command{
 
 		// logger
 		logType, err := cmd.Flags().GetString("log")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed get log type flag: %s", err)
-			os.Exit(1)
+		if err == nil {
+			config.LogType = logType
 		}
-		newLogger, ok := logger.FnNewMap[logType]
-		if !ok {
-			logType = logger.DefaultType
-			newLogger = logger.NewLogger
-		}
-		logger := newLogger(config)
-		logger.Info().Msgf("use logger %s", logType)
+		logger := logger.NewLogger(config)
+		logger.Info().Msgf("use logger %s", config.LogType)
 
 		// db
 		dbType, err := cmd.Flags().GetString("database")

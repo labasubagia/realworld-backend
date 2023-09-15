@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"github.com/labasubagia/realworld-backend/internal/adapter/logger"
+	"github.com/labasubagia/realworld-backend/internal/core/domain"
 	"github.com/labasubagia/realworld-backend/internal/core/port"
 )
 
@@ -16,12 +17,15 @@ func (s *Server) Logger() gin.HandlerFunc {
 		// request id
 		reqID := c.GetHeader("x-request-id")
 		if reqID == "" {
-			reqID = uuid.NewString()
+			reqID = domain.NewID().String()
 		}
 
 		// make logger and sub-logger
-		logger := s.logger.Field("request_id", reqID).Logger()
+		// ? make unique instance for each handler/interactor request
+		logger := logger.NewLogger(s.config).Field("request_id", reqID).Logger()
 		c.Set(port.SubLoggerCtxKey, logger)
+
+		// logger := s.logger.Field("request_id", reqID).Logger()
 
 		// process request
 		startTime := time.Now()

@@ -25,5 +25,9 @@ func Keys() (keys []string) {
 }
 
 func NewLogger(config util.Config) port.Logger {
+	new, ok := FnNewMap[config.LogType]
+	if ok {
+		return new(config)
+	}
 	return FnNewMap[DefaultType](config)
 }
