@@ -33,9 +33,9 @@ func (s *Server) Logger() gin.HandlerFunc {
 		duration := time.Since(startTime)
 
 		// log
-		logEvent := s.logger.Info()
+		logEvent := logger.Info()
 		if c.Writer.Status() >= 500 {
-			logEvent = s.logger.Error()
+			logEvent = logger.Error()
 			if c.Request != nil && c.Request.Body != nil {
 				if body, err := io.ReadAll(c.Request.Body); err == nil {
 					logEvent.Field("body", body)
@@ -43,7 +43,6 @@ func (s *Server) Logger() gin.HandlerFunc {
 			}
 		}
 		logEvent.
-			Field("request_id", reqID).
 			Field("protocol", "http").
 			Field("method", c.Request.Method).
 			Field("path", c.Request.URL.Path).
