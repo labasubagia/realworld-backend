@@ -1,7 +1,6 @@
 package restful
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +35,7 @@ func (server *Server) ListArticle(c *gin.Context) {
 		arg.FavoritedNames = append(arg.FavoritedNames, FavoritedBy)
 	}
 
-	articles, err := server.service.Article().List(context.Background(), arg)
+	articles, err := server.service.Article().List(c, arg)
 	if err != nil {
 		errorHandler(c, err)
 		return
@@ -66,7 +65,7 @@ func (server *Server) FeedArticle(c *gin.Context) {
 		Offset:  offset,
 		Limit:   limit,
 	}
-	articles, err := server.service.Article().Feed(context.Background(), arg)
+	articles, err := server.service.Article().Feed(c, arg)
 	if err != nil {
 		errorHandler(c, err)
 		return
@@ -87,7 +86,7 @@ func (server *Server) GetArticle(c *gin.Context) {
 	slug := c.Param("slug")
 	authArg, _ := getAuthArg(c)
 
-	article, err := server.service.Article().Get(context.Background(), port.GetArticleParams{
+	article, err := server.service.Article().Get(c, port.GetArticleParams{
 		AuthArg: authArg,
 		Slug:    slug,
 	})
@@ -124,7 +123,7 @@ func (server *Server) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := server.service.Article().Create(context.Background(), port.CreateArticleTxParams{
+	article, err := server.service.Article().Create(c, port.CreateArticleTxParams{
 		AuthArg: authArg,
 		Tags:    req.Article.TagList,
 		Article: domain.Article{
@@ -166,7 +165,7 @@ func (server *Server) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := server.service.Article().Update(context.Background(), port.UpdateArticleParams{
+	article, err := server.service.Article().Update(c, port.UpdateArticleParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		Article: domain.Article{
@@ -192,7 +191,7 @@ func (server *Server) DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	err = server.service.Article().Delete(context.Background(), port.DeleteArticleParams{
+	err = server.service.Article().Delete(c, port.DeleteArticleParams{
 		AuthArg: authArg,
 		Slug:    slug,
 	})
@@ -222,7 +221,7 @@ func (server *Server) AddComment(c *gin.Context) {
 		return
 	}
 
-	result, err := server.service.Article().AddComment(context.Background(), port.AddCommentParams{
+	result, err := server.service.Article().AddComment(c, port.AddCommentParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		Comment: domain.Comment{
@@ -242,7 +241,7 @@ func (server *Server) ListComments(c *gin.Context) {
 	slug := c.Param("slug")
 	authArg, _ := getAuthArg(c)
 
-	comments, err := server.service.Article().ListComments(context.Background(), port.ListCommentParams{
+	comments, err := server.service.Article().ListComments(c, port.ListCommentParams{
 		AuthArg: authArg,
 		Slug:    slug,
 	})
@@ -275,7 +274,7 @@ func (server *Server) DeleteComment(c *gin.Context) {
 		return
 	}
 
-	err = server.service.Article().DeleteComment(context.Background(), port.DeleteCommentParams{
+	err = server.service.Article().DeleteComment(c, port.DeleteCommentParams{
 		AuthArg:   authArg,
 		Slug:      slug,
 		CommentID: domain.ID(commentID),
@@ -296,7 +295,7 @@ func (server *Server) AddFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := server.service.Article().AddFavorite(context.Background(), port.AddFavoriteParams{
+	article, err := server.service.Article().AddFavorite(c, port.AddFavoriteParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		UserID:  authArg.Payload.UserID,
@@ -321,7 +320,7 @@ func (server *Server) RemoveFavoriteArticle(c *gin.Context) {
 		return
 	}
 
-	article, err := server.service.Article().RemoveFavorite(context.Background(), port.RemoveFavoriteParams{
+	article, err := server.service.Article().RemoveFavorite(c, port.RemoveFavoriteParams{
 		AuthArg: authArg,
 		Slug:    slug,
 		UserID:  authArg.Payload.UserID,
@@ -336,7 +335,7 @@ func (server *Server) RemoveFavoriteArticle(c *gin.Context) {
 }
 
 func (server *Server) ListTags(c *gin.Context) {
-	tags, err := server.service.Article().ListTags(context.Background())
+	tags, err := server.service.Article().ListTags(c)
 	if err != nil {
 		errorHandler(c, err)
 		return

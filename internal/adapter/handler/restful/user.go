@@ -1,7 +1,6 @@
 package restful
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -79,7 +78,7 @@ func (server *Server) CurrentUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	user, err := server.service.User().Current(context.Background(), authArg)
+	user, err := server.service.User().Current(c, authArg)
 	if err != nil {
 		errorHandler(c, err)
 		return
@@ -111,7 +110,7 @@ func (server *Server) UpdateUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	user, err := server.service.User().Update(context.Background(), port.UpdateUserParams{
+	user, err := server.service.User().Update(c, port.UpdateUserParams{
 		AuthArg: authArg,
 		User: domain.User{
 			ID:       authArg.Payload.UserID,
@@ -133,7 +132,7 @@ func (server *Server) UpdateUser(c *gin.Context) {
 func (server *Server) Profile(c *gin.Context) {
 	username := c.Param("username")
 	authArg, _ := getAuthArg(c)
-	user, err := server.service.User().Profile(context.Background(), port.ProfileParams{
+	user, err := server.service.User().Profile(c, port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
@@ -152,7 +151,7 @@ func (server *Server) FollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	user, err := server.service.User().Follow(context.Background(), port.ProfileParams{
+	user, err := server.service.User().Follow(c, port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
@@ -171,7 +170,7 @@ func (server *Server) UnFollowUser(c *gin.Context) {
 		errorHandler(c, err)
 		return
 	}
-	user, err := server.service.User().UnFollow(context.Background(), port.ProfileParams{
+	user, err := server.service.User().UnFollow(c, port.ProfileParams{
 		Username: username,
 		AuthArg:  authArg,
 	})
