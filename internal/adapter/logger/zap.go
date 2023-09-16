@@ -25,6 +25,10 @@ func NewZapLogger(config util.Config) port.Logger {
 	}
 }
 
+func (l *zapLogger) NewInstance() port.Logger {
+	return NewZapLogger(l.config)
+}
+
 func (l *zapLogger) Field(key string, value any) port.Logger {
 	l.fields[key] = value
 	return l

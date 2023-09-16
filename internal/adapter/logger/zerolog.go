@@ -13,6 +13,7 @@ import (
 const TypeZeroLog = "zerolog"
 
 type zeroLogLogger struct {
+	config util.Config
 	logger zerolog.Logger
 	fields map[string]any
 }
@@ -24,9 +25,14 @@ func NewZeroLogLogger(config util.Config) port.Logger {
 		logger = zerolog.New(output).With().Timestamp().Logger()
 	}
 	return &zeroLogLogger{
+		config: config,
 		logger: logger,
 		fields: map[string]any{},
 	}
+}
+
+func (l *zeroLogLogger) NewInstance() port.Logger {
+	return NewZeroLogLogger(l.config)
 }
 
 func (l *zeroLogLogger) Field(key string, value any) port.Logger {

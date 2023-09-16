@@ -8,6 +8,8 @@ import (
 const SubLoggerCtxKey = "sub_logger"
 
 type Logger interface {
+	NewInstance() Logger
+
 	Field(string, any) Logger
 	Logger() Logger
 

@@ -43,6 +43,11 @@ func (s *Server) parseToken(c *gin.Context) (port.AuthParams, error) {
 	return port.AuthParams{Token: token, Payload: payload}, nil
 }
 
+func hasToken(c *gin.Context) bool {
+	authorizationHeader := c.GetHeader(authorizationHeaderKey)
+	return len(authorizationHeader) > 0
+}
+
 func getAuthArg(c *gin.Context) (port.AuthParams, error) {
 	arg, ok := c.Get(authorizationArgKey)
 	if !ok {
