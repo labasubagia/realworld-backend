@@ -14,6 +14,10 @@ func (server *Server) AuthMiddleware(autoDenied bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authArg, err := server.parseToken(c)
 		if err != nil {
+			if hasToken(c) {
+				errorHandler(c, err)
+				return
+			}
 			if autoDenied {
 				errorHandler(c, err)
 				return
