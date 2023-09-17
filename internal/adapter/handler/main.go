@@ -25,5 +25,9 @@ func Keys() (keys []string) {
 }
 
 func NewServer(config util.Config, service port.Service, logger port.Logger) port.Server {
-	return grpc_api.NewServer(config, service, logger)
+	new, ok := fnNewMap[config.DBType]
+	if ok {
+		return new(config, service, logger)
+	}
+	return fnNewMap[defaultType](config, service, logger)
 }
