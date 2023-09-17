@@ -27,3 +27,11 @@ test_cover:
 
 e2e:
 	APIURL=http://0.0.0.0:5000 ./tests/run-api-tests.sh
+
+
+# gen
+gen_grpc_protoc:
+	protoc \
+		--proto_path=internal/adapter/handler/grpc/proto --go_out=internal/adapter/handler/grpc/pb --go_opt=paths=source_relative \
+		--go-grpc_out=internal/adapter/handler/grpc/pb --go-grpc_opt=paths=source_relative \
+		internal/adapter/handler/grpc/proto/*.proto

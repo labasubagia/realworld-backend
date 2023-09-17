@@ -15,6 +15,8 @@ import (
 	"github.com/labasubagia/realworld-backend/internal/core/util"
 )
 
+const TypeRestful = "restful"
+
 type Server struct {
 	config  util.Config
 	router  *gin.Engine
@@ -89,7 +91,7 @@ func (server *Server) setupRouter() {
 
 func (server *Server) Start() error {
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", server.config.HTTPServerPort),
+		Addr:    fmt.Sprintf(":%d", server.config.ServerPort),
 		Handler: server.router,
 	}
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/labasubagia/realworld-backend/internal/adapter/handler/restful"
+	"github.com/labasubagia/realworld-backend/internal/adapter/handler"
 	"github.com/labasubagia/realworld-backend/internal/adapter/logger"
 	"github.com/labasubagia/realworld-backend/internal/adapter/repository"
 	"github.com/labasubagia/realworld-backend/internal/core/service"
@@ -15,11 +15,13 @@ import (
 func init() {
 	dbTypeStr := strings.Join(repository.Keys(), ", ")
 	logTypeStr := strings.Join(logger.Keys(), ", ")
+	serverTypeStr := strings.Join(handler.Keys(), ", ")
 
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().Bool("prod", config.IsProduction(), "use for production")
-	serverCmd.Flags().IntVarP(&config.HTTPServerPort, "port", "p", config.HTTPServerPort, "server port number")
+	serverCmd.Flags().StringVarP(&config.ServerType, "server", "s", config.ServerType, fmt.Sprintf("server type in (%s)", serverTypeStr))
+	serverCmd.Flags().IntVarP(&config.ServerPort, "port", "p", config.ServerPort, "server port number")
 	serverCmd.Flags().StringVarP(&config.DBType, "database", "d", config.DBType, fmt.Sprintf("database type in (%s)", dbTypeStr))
 	serverCmd.Flags().StringVarP(&config.LogType, "log", "l", config.LogType, fmt.Sprintf("log type in (%s)", logTypeStr))
 }
@@ -50,8 +52,8 @@ var serverCmd = &cobra.Command{
 			logger.Fatal().Err(err).Msg("failed to load service")
 		}
 
-		logger.Info().Msgf("listen to port %d", config.HTTPServerPort)
-		server := restful.NewServer(config, service, logger)
+		logger.Info().Msgf("%s server listen to port %d", config.ServerType, config.ServerPort)
+		server := handler.NewServer(config, service, logger)
 		if server.Start(); err != nil {
 			logger.Fatal().Err(err).Msg("failed to load service")
 		}

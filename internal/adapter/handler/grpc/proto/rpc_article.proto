@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package pb;
+
+import "article.proto";
+
+option go_package = "github.com/labasubagia/realworld-backend/internal/adapter/handler/grpc/pb";
+
+message ArticleResponse {
+    Article article = 1;
+}
+
+
+message ArticlesResponse {
+    repeated Article articles = 1;
+    int64 count = 2;
+}
+
+message FilterArticleRequest {
+    optional string tag = 1; 
+    optional string author = 2; 
+    optional string favorited = 3; 
+    optional int64 offset = 4;
+    optional int64 limit  = 5;
+}
+
+message GetArticleRequest {
+    string slug = 1;
+}
+
+message CreateArticleRequest {
+    message Article {
+        string title = 1;
+        string description = 2;
+        string body = 3;
+        repeated string tag_list = 4;
+    }
+    Article article = 1;
+}
+
+message UpdateArticleRequest {
+    message Article {
+        string title = 1;
+        string description = 2;
+        string body = 3;
+    }
+    string slug = 1;
+    Article article = 2;
+}
+
+message CommentResponse {
+    Comment comment = 1;
+}
+
+message CommentsResponse {
+    repeated Comment comments = 1;
+}
+
+message CreateCommentRequest {
+    message Comment {
+        string body = 1;
+    }
+    string slug = 1;
+    Comment comment = 2;
+}
+
+message ListCommentRequest {
+    string slug = 1;
+}
+
+message GetCommentRequest {
+    string slug = 1;
+    string comment_id = 2;
+}
+
+message ListTagResponse {
+    repeated string tags = 1;
+}

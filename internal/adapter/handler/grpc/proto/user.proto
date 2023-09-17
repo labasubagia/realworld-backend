@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/labasubagia/realworld-backend/internal/adapter/handler/grpc/pb";
+
+
+message User {
+    string email = 1;
+    string username = 2;
+    string bio = 3; 
+    string image = 4;
+    string token = 5;
+}
+
+message Profile {
+    string username = 1;
+    string image = 2;
+    string bio = 3;
+    bool following = 4;
+}

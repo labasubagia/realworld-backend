@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package pb;
+
+import "user.proto";
+
+option go_package = "github.com/labasubagia/realworld-backend/internal/adapter/handler/grpc/pb";
+
+message RegisterUserRequest {
+    message User {
+        string email = 1;
+        string password = 2;
+        string username = 3;
+    }
+    User user = 1;
+}
+
+
+message LoginUserRequest {
+    message User {
+        string email = 1;
+        string password = 2;
+    }
+    User user = 1;
+}
+
+message UpdateUserRequest {
+    message User {
+        string email = 1;
+        string username = 2;
+        string password = 3;
+        string image = 4;
+        string bio = 5;
+    }
+    User user = 1;
+}
+
+message UserResponse {
+    User user = 1;
+}
+
+message GetProfileRequest {
+    string username = 1;
+}
+
+message ProfileResponse {
+    Profile profile = 1;
+}

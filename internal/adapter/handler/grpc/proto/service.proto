@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/empty.proto";
+import "rpc_user.proto";
+import "rpc_article.proto";
+
+option go_package = "github.com/labasubagia/realworld-backend/internal/adapter/handler/grpc/pb";
+
+message Response {
+    string status = 1;
+}
+
+service RealWorld {
+    rpc RegisterUser(RegisterUserRequest) returns (UserResponse) {};
+    rpc LoginUser(LoginUserRequest) returns (UserResponse) {};
+    rpc UpdateUser(UpdateUserRequest) returns (UserResponse) {};
+    rpc CurrentUser(google.protobuf.Empty) returns (UserResponse) {};
+
+    rpc GetProfile(GetProfileRequest) returns (ProfileResponse) {};
+    rpc FollowUser(GetProfileRequest) returns (ProfileResponse) {};
+    rpc UnFollowUser(GetProfileRequest) returns (ProfileResponse) {};
+
+    rpc ListArticle(FilterArticleRequest) returns (ArticlesResponse) {};
+    rpc FeedArticle(FilterArticleRequest) returns (ArticlesResponse) {};
+    rpc GetArticle(GetArticleRequest) returns (ArticleResponse) {};
+    rpc CreateArticle(CreateArticleRequest) returns (ArticleResponse) {};
+    rpc UpdateArticle(UpdateArticleRequest) returns (ArticleResponse) {};
+    rpc DeleteArticle(GetArticleRequest) returns (Response) {};
+    rpc FavoriteArticle(GetArticleRequest) returns (ArticleResponse) {};
+    rpc UnFavoriteArticle(GetArticleRequest) returns (ArticleResponse) {};
+    rpc ListTag(google.protobuf.Empty) returns (ListTagResponse) {};
+
+    rpc CreateComment(CreateCommentRequest) returns (CommentResponse) {};
+    rpc ListComment(ListCommentRequest) returns (CommentsResponse) {};
+    rpc DeleteComment(GetCommentRequest) returns (Response) {};
+}

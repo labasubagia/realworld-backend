@@ -17,9 +17,11 @@ type Config struct {
 
 	MongoSource string `mapstructure:"MONGO_SOURCE"`
 
-	HTTPServerPort int    `mapstructure:"HTTP_SERVER_PORT"`
-	LogType        string `mapstructure:"LOG_TYPE"`
-	DBType         string `mapstructure:"DB_TYPE"`
+	ServerType string `mapstructure:"SERVER_TYPE"`
+	ServerPort int    `mapstructure:"SERVER_PORT"`
+
+	LogType string `mapstructure:"LOG_TYPE"`
+	DBType  string `mapstructure:"DB_TYPE"`
 
 	TokenSymmetricKey string `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 
