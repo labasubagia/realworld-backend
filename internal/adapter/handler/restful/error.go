@@ -24,7 +24,7 @@ func errorHandler(c *gin.Context, err error) {
 	switch fail.Type {
 	case exception.TypeNotFound:
 		statusCode = http.StatusNotFound
-	case exception.TypeTokenExpired, exception.TypeTokenInvalid:
+	case exception.TypeTokenExpired, exception.TypeTokenInvalid, exception.TypePermissionDenied:
 		statusCode = http.StatusUnauthorized
 	case exception.TypeValidation:
 		statusCode = http.StatusUnprocessableEntity
