@@ -52,5 +52,8 @@ func Into(err error) *Exception {
 }
 
 func (fail *Exception) Error() string {
+	if fail.Cause == nil {
+		return ""
+	}
 	return fail.Cause.Error()
 }
