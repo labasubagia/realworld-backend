@@ -33,5 +33,10 @@
     "go.testFlags": [
         "-count=1"
     ],
-    "dotenv.enableAutocloaking": false
+    "dotenv.enableAutocloaking": false,
+    "protoc": {
+        "options": [
+            "--proto_path=internal/adapter/handler/grpc/proto"
+        ]
+    }
 }
