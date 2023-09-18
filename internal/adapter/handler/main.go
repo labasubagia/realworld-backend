@@ -25,7 +25,7 @@ func Keys() (keys []string) {
 }
 
 func NewServer(config util.Config, service port.Service, logger port.Logger) port.Server {
-	new, ok := fnNewMap[config.DBType]
+	new, ok := fnNewMap[config.ServerType]
 	if ok {
 		return new(config, service, logger)
 	}
