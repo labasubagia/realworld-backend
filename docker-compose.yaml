@@ -13,14 +13,20 @@ services:
       - 5432:5432
     volumes:
       - postgres:/var/lib/postgresql/data
-  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 1s
+      retries: 10      
+
   adminer:
     image: adminer
     restart: always
     ports:
       - 8081:8080
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   mongo:
     image: mongo
@@ -32,6 +38,74 @@ services:
       - 27017:27017
     volumes:
       - mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+  # apps
+
+  restful:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["/app/main", "server"]
+    profiles:
+      - restful_postgres
+
+  restful_mongo:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5002:5000
+    env_file:
+      - .env.docker
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: ["/app/main", "server", "-d", "mongo"]
+    profiles:
+      - restful_mongo
+
+  grpc:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5001:5000
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["/app/main", "server", "-s", "grpc"]
+    profiles:
+      - grpc
+      - grpc_postgres
+
+  grpc_mongo:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5001:5000
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["/app/main", "server", "-s", "grpc", "-d", "mongo"]
+    profiles:
+      - grpc_mongo
 
 volumes:
   postgres:
