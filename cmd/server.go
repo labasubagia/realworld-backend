@@ -28,8 +28,8 @@ func init() {
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "run http server",
-	Long:  "Run gin server restful API",
+	Short: "run server",
+	Long:  "Run server",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// is_prod
