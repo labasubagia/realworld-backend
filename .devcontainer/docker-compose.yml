@@ -46,16 +46,16 @@ services:
     environment:
       - CONNECTIONS=con1,con2
       
-      - LABEL_con1=MySQL
-      - SERVER_con1=mysql
-      - USER_con1=phastos
-      - PASSWORD_con1=phastos
-      - PORT_con1=3306
-      - ENGINE_con1=mysql@dbgate-plugin-mysql
+      - LABEL_con1=Postgres
+      - SERVER_con1=postgres
+      - USER_con1=postgres
+      - PASSWORD_con1=postgres
+      - PORT_con1=5432
+      - ENGINE_con1=postgres@dbgate-plugin-postgres
 
       - LABEL_con2=MongoDB
       - SERVER_con2=mongo
-      - USER_con2=root0
+      - USER_con2=root
       - PASSWORD_con2=root
       - PORT_con2=27017
       - ENGINE_con2=mongo@dbgate-plugin-mongo
