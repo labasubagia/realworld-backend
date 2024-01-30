@@ -6,7 +6,7 @@
 	"shutdownAction": "stopCompose",
 	"forwardPorts": [5000],
 	"remoteUser": "vscode",
-	"initializeCommand": ["cp .env.docker .env", "cp .env.test.example .env.test"],
+	"initializeCommand": ["cp .env.docker .env", "cp .env.docker.test.example .env.test"],
 	"customizations": {
 		"vscode": {
 			"extensions": [
