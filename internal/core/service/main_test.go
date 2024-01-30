@@ -16,7 +16,7 @@ var testRepo port.Repository
 var testService port.Service
 
 func TestMain(m *testing.M) {
-	config, err := util.LoadConfig("../../../.env.test")
+	config, err := util.LoadConfig("../../../.env")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "failed to load config", err)
 		os.Exit(1)

@@ -44,5 +44,5 @@ jobs:
 
       - name: Test
         run: |
-          cp .env.test.example .env.test
+          cp .env.example .env
           make test_all

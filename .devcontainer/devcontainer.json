@@ -4,17 +4,19 @@
 	"service": "realworld",
 	"workspaceFolder": "/workspace",
 	"shutdownAction": "stopCompose",
-	"forwardPorts": [5000],
+	"forwardPorts": [
+		5000
+	],
 	"remoteUser": "vscode",
-	"postCreateCommand": "cp .env.docker .env && cp .env.docker.test.example .env.test",
+	"postCreateCommand": "cp .env.docker .env",
 	"customizations": {
 		"vscode": {
 			"extensions": [
-                "golang.Go",
-                "usernamehw.errorlens",
-                "eamodio.gitlens",
-                "streetsidesoftware.code-spell-checker",
-                "EditorConfig.EditorConfig",
+				"golang.Go",
+				"usernamehw.errorlens",
+				"eamodio.gitlens",
+				"streetsidesoftware.code-spell-checker",
+				"EditorConfig.EditorConfig",
 				"ms-azuretools.vscode-docker"
 			],
 			"settings": {

@@ -12,10 +12,8 @@ const (
 type Config struct {
 	Environment string `mapstructure:"ENVIRONMENT"`
 
-	PostgresSource       string `mapstructure:"POSTGRES_SOURCE"`
-	PostgresMigrationURL string `mapstructure:"POSTGRES_MIGRATION_URL"`
-
-	MongoSource string `mapstructure:"MONGO_SOURCE"`
+	PostgresSource string `mapstructure:"POSTGRES_SOURCE"`
+	MongoSource    string `mapstructure:"MONGO_SOURCE"`
 
 	ServerType string `mapstructure:"SERVER_TYPE"`
 	ServerPort int    `mapstructure:"SERVER_PORT"`

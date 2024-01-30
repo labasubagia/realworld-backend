@@ -2,7 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"path"
+	"path/filepath"
+	"runtime"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -59,7 +63,14 @@ func (db *DB) connect() (*bun.DB, error) {
 }
 
 func (db *DB) migrate() error {
-	migration, err := migrate.New(db.config.PostgresMigrationURL, db.config.PostgresSource)
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return errors.New("unable to get the current current file")
+	}
+	currentDir := filepath.Dir(currentFile)
+	migrationURL := fmt.Sprintf("file://%s", path.Join(currentDir, "migration"))
+
+	migration, err := migrate.New(migrationURL, db.config.PostgresSource)
 	if err != nil {
 		return fmt.Errorf("cannot create new migration instance: %s", err)
 	}
