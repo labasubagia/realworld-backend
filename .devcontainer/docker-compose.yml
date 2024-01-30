@@ -1,0 +1,85 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=realworld
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 1s
+      timeout: 1s
+      retries: 10   
+
+  dbgate:
+    image: dbgate/dbgate:alpine
+    ports:
+      - 8080:3000
+    volumes:
+      - dbgate:/root/.dbgate
+    depends_on:
+      - postgres
+      - mongo
+    environment:
+      - CONNECTIONS=con1,con2
+      
+      - LABEL_con1=MySQL
+      - SERVER_con1=mysql
+      - USER_con1=phastos
+      - PASSWORD_con1=phastos
+      - PORT_con1=3306
+      - ENGINE_con1=mysql@dbgate-plugin-mysql
+
+      - LABEL_con2=MongoDB
+      - SERVER_con2=mongo
+      - USER_con2=root0
+      - PASSWORD_con2=root
+      - PORT_con2=27017
+      - ENGINE_con2=mongo@dbgate-plugin-mongo
+
+  realworld:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - postgres
+      - mongo
+    ports:
+      - 5000:5000
+    volumes:
+      - ..:/workspace:cached
+      - ~/.ssh:/home/vscode/.ssh:ro
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    
+    # don't use env var for in development here, it will conflict (e.g with test env)
+    # create separate .env
+    # env_file:
+      # - ../.env.docker
+    
+volumes:
+  mongo:
+  postgres:
+  dbgate:

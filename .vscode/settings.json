@@ -1,11 +1,14 @@
 {
     "cSpell.words": [
         "autoincrement",
+        "azuretools",
         "bson",
         "bundebug",
         "DBTX",
         "dgrijalva",
+        "eamodio",
         "emptypb",
+        "errorlens",
         "Favorited",
         "gonic",
         "interactor",
@@ -27,6 +30,7 @@
         "timestamppb",
         "Upsert",
         "uptrace",
+        "usernamehw",
         "writeconcern",
         "zerolog"
     ],

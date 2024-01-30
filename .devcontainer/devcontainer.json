@@ -1,0 +1,31 @@
+{
+	"name": "Realworld",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "realworld",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	"forwardPorts": [5000],
+	"remoteUser": "vscode",
+	"initializeCommand": ["cp .env.docker .env", "cp .env.test.example .env.test"],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+                "golang.Go",
+                "usernamehw.errorlens",
+                "eamodio.gitlens",
+                "streetsidesoftware.code-spell-checker",
+                "EditorConfig.EditorConfig",
+				"ms-azuretools.vscode-docker"
+			],
+			"settings": {
+				"[go]": {
+					"editor.insertSpaces": false,
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": true
+					}
+				}
+			}
+		}
+	}
+}

@@ -34,6 +34,7 @@ $ docker compose --profile restful_postgres up -d
 1. Add environment
     ```
     cp env.example .env
+    cp env.test.example .env.test
     ```
 1. Run all required external dependency for development (databases)
     ```sh

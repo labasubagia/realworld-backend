@@ -34,6 +34,7 @@ yarn-error.log*
 
 # environment
 .env
+.env.test
 
 # go
 __debug_bin*
